@@ -227,6 +227,65 @@ export function upsertManagedBlock(text, name, body, comment = "#") {
   return `${base}${sep}${block}\n`;
 }
 
+/**
+ * Marker pairs other tools use to fence off a region of a markdown file they
+ * manage. Both forms are real and in the wild:
+ *
+ *   `<!-- antislop:start -->` … `<!-- antislop:end -->`   the anti-slop installer
+ *   `<!-- BEGIN BEADS INTEGRATION -->` … `<!-- END … -->`  bd's own block
+ *
+ * The name is captured and back-referenced, so an opening marker only closes
+ * against its own end tag — two tools' blocks in one file stay separate.
+ */
+const FOREIGN_BLOCK_PATTERNS = [
+  /<!--\s*([A-Za-z0-9_.-]+):start\s*-->[\s\S]*?<!--\s*\1:end\s*-->/g,
+  /<!--\s*BEGIN\s+([A-Za-z0-9_.\- ]+?)\s*-->[\s\S]*?<!--\s*END\s+\1\s*-->/g,
+];
+
+/**
+ * Regions of `text` that belong to another tool, in the order they appear.
+ *
+ * This exists because two generators can own the same file. `agents:sync`
+ * rewrites its pointer files wholesale, so anything another installer had
+ * written into one was silently deleted — and until it was deleted, the lint
+ * gate failed, because the file no longer matched what the generator produces.
+ * Installing a second agent-rules tool therefore broke `npm run gate`, and the
+ * fix the error suggested destroyed the other tool's work.
+ */
+export function foreignBlocks(text) {
+  if (!text) return [];
+  const found = [];
+  for (const re of FOREIGN_BLOCK_PATTERNS) {
+    for (const m of text.matchAll(re)) found.push({ name: m[1], text: m[0], index: m.index });
+  }
+  return found.sort((a, b) => a.index - b.index).map(({ name, text }) => ({ name, text }));
+}
+
+/**
+ * Generated content plus the blocks another tool owns, appended verbatim.
+ *
+ * With no foreign blocks the output is the generated text unchanged, so files
+ * that nobody else has touched stay byte-identical and never churn. The result
+ * is idempotent: re-reading it finds the same blocks and rebuilds the same file.
+ */
+export function withForeignBlocks(generated, blocks) {
+  // A block the generator itself emits is not foreign. Without this, prose in
+  // the generated text that merely SHOWS the marker syntax is read back as a
+  // real block and appended again on every run — the file grew by three lines
+  // each time `agents:sync` ran. Caught by asserting the second run is a no-op.
+  const foreign = blocks.filter((b) => !generated.includes(b.text));
+  if (!foreign.length) return generated;
+  return [
+    generated.trimEnd(),
+    "",
+    "<!-- The blocks below are managed by OTHER tools and are preserved across",
+    "     `npm run agents:sync`. Edit each with the tool that owns it. -->",
+    "",
+    ...foreign.map((b) => b.text),
+    "",
+  ].join("\n");
+}
+
 export function note(msg, prefix = "") {
   process.stderr.write(`${prefix}${msg}\n`);
 }
