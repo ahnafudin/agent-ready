@@ -236,10 +236,17 @@ export function upsertManagedBlock(text, name, body, comment = "#") {
  *
  * The name is captured and back-referenced, so an opening marker only closes
  * against its own end tag — two tools' blocks in one file stay separate.
+ *
+ * Each marker must sit ALONE on its line. That is not cosmetic. Without it, a
+ * single line of prose naming both markers reads as a real block — which is how
+ * a banner that documented this feature by showing the syntax got preserved as
+ * four "blocks" into six generated files, and then stayed there: the file was
+ * self-consistent, so `--check` reported it current for ever. A preservation
+ * rule that cannot see its own damage is worse than no preservation at all.
  */
 const FOREIGN_BLOCK_PATTERNS = [
-  /<!--\s*([A-Za-z0-9_.-]+):start\s*-->[\s\S]*?<!--\s*\1:end\s*-->/g,
-  /<!--\s*BEGIN\s+([A-Za-z0-9_.\- ]+?)\s*-->[\s\S]*?<!--\s*END\s+\1\s*-->/g,
+  /^[ \t]*<!--[ \t]*([A-Za-z0-9_.-]+):start[ \t]*-->[ \t]*$[\s\S]*?^[ \t]*<!--[ \t]*\1:end[ \t]*-->[ \t]*$/gm,
+  /^[ \t]*<!--[ \t]*BEGIN[ \t]+([A-Za-z0-9_.\- ]+?)[ \t]*-->[ \t]*$[\s\S]*?^[ \t]*<!--[ \t]*END[ \t]+\1[ \t]*-->[ \t]*$/gm,
 ];
 
 /**

@@ -44,6 +44,18 @@ describe("foreignBlocks", () => {
     );
   });
 
+  it("does not read a single line of prose as a block", () => {
+    // The bug this pins was shipped, and it was self-concealing. A banner line
+    // that documented the feature by naming both markers inline was read as a
+    // real block, preserved into six generated files, and then kept for ever —
+    // the files were self-consistent, so `--check` called them current while
+    // they held garbage. A marker must sit ALONE on its line to fence anything.
+    const prose = "A region marked <!-- name:start --> … <!-- name:end --> is preserved.";
+    assert.deepEqual(foreignBlocks(prose), []);
+    const trailing = ["text <!-- x:start -->", "body", "<!-- x:end --> trailing"].join("\n");
+    assert.deepEqual(foreignBlocks(trailing), [], "a marker sharing its line fences nothing");
+  });
+
   it("ignores a lone comment and an unclosed marker", () => {
     assert.deepEqual(foreignBlocks("<!-- just a comment -->"), []);
     assert.deepEqual(foreignBlocks("<!-- antislop:start -->\nno end marker\n"), []);

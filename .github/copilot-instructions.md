@@ -33,11 +33,3 @@
 Cross-session issues live in **beads** (`bd ready`, `bd show <id>`, `bd update <id> --claim`,
 `bd close <id>`); `docs/TASKS.md` is the roadmap checklist, not an issue queue. If `bd` is not
 installed, skip it — it is optional. Full detail, as always, in `AGENTS.md`.
-
-<!-- The blocks below are managed by OTHER tools and are preserved across
-     `npm run agents:sync`. Edit each with the tool that owns it. -->
-
-<!-- name:start -->` … `<!-- name:end -->
-<!-- name:start -->` … `<!-- name:end -->
-<!-- name:start -->` … `<!-- name:end -->
-<!-- name:start -->` … `<!-- name:end -->
