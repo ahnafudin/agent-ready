@@ -229,10 +229,10 @@ export function upsertManagedBlock(text, name, body, comment = "#") {
 
 /**
  * Marker pairs other tools use to fence off a region of a markdown file they
- * manage. Both forms are real and in the wild:
+ * manage. Both forms are common; bd writes the second one into this repo:
  *
- *   `<!-- antislop:start -->` … `<!-- antislop:end -->`   the anti-slop installer
- *   `<!-- BEGIN BEADS INTEGRATION -->` … `<!-- END … -->`  bd's own block
+ *   `<!-- toolname:start -->` … `<!-- toolname:end -->`
+ *   `<!-- BEGIN BEADS INTEGRATION -->` … `<!-- END … -->`
  *
  * The name is captured and back-referenced, so an opening marker only closes
  * against its own end tag — two tools' blocks in one file stay separate.

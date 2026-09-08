@@ -1,12 +1,12 @@
 // Two generators, one file.
 //
 // `agents:sync` rewrites its pointer files wholesale, which was fine while it
-// was the only tool writing them. It is not: the anti-slop installer fences a
-// region into GEMINI.md (and CLAUDE.md, and AGENTS.md) between
-// `antislop:start` / `antislop:end` markers, and bd writes a BEGIN/END block of
-// its own. Before this, installing either one broke `npm run gate` — the
-// pointer file no longer matched what the generator produces — and the fix the
-// error message suggested, `npm run agents:sync`, deleted the other tool's work.
+// was the only tool writing them. It is not: rules installers commonly append a
+// fenced region to CLAUDE.md, AGENTS.md or GEMINI.md, and bd writes a BEGIN/END
+// block of its own. Before this, installing any of them broke `npm run gate` —
+// the pointer file no longer matched what the generator produces — and the fix
+// the error message suggested, `npm run agents:sync`, deleted the other tool's
+// work.
 //
 // So the rule is: this repo owns the GENERATED part of those files, not the
 // whole file.
@@ -17,15 +17,15 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { at, foreignBlocks, withForeignBlocks } from "../lib/util.mjs";
 import { renderStub, sync, TARGETS } from "../sync-agents.mjs";
 
-const ANTISLOP = ["<!-- antislop:start -->", "- **antislop** — core rules.", "<!-- antislop:end -->"].join("\n");
+const OTHER = ["<!-- other-tool:start -->", "- a line the other tool manages.", "<!-- other-tool:end -->"].join("\n");
 const BEADS = ["<!-- BEGIN BEADS INTEGRATION -->", "bd ready", "<!-- END BEADS INTEGRATION -->"].join("\n");
 
 describe("foreignBlocks", () => {
   it("finds a start/end block", () => {
-    const found = foreignBlocks(`# Title\n\n${ANTISLOP}\n`);
+    const found = foreignBlocks(`# Title\n\n${OTHER}\n`);
     assert.equal(found.length, 1);
-    assert.equal(found[0].name, "antislop");
-    assert.equal(found[0].text, ANTISLOP);
+    assert.equal(found[0].name, "other-tool");
+    assert.equal(found[0].text, OTHER);
   });
 
   it("finds a BEGIN/END block", () => {
@@ -37,10 +37,10 @@ describe("foreignBlocks", () => {
   it("keeps two tools' blocks separate, in the order they appear", () => {
     // The end marker is back-referenced to its own name, so one tool's opening
     // marker can never swallow another tool's block by closing against its end.
-    const found = foreignBlocks(`${ANTISLOP}\n\n${BEADS}\n`);
+    const found = foreignBlocks(`${OTHER}\n\n${BEADS}\n`);
     assert.deepEqual(
       found.map((b) => b.text),
-      [ANTISLOP, BEADS],
+      [OTHER, BEADS],
     );
   });
 
@@ -58,7 +58,7 @@ describe("foreignBlocks", () => {
 
   it("ignores a lone comment and an unclosed marker", () => {
     assert.deepEqual(foreignBlocks("<!-- just a comment -->"), []);
-    assert.deepEqual(foreignBlocks("<!-- antislop:start -->\nno end marker\n"), []);
+    assert.deepEqual(foreignBlocks("<!-- other-tool:start -->\nno end marker\n"), []);
   });
 
   it("returns nothing for an empty or missing file", () => {
@@ -77,14 +77,14 @@ describe("withForeignBlocks", () => {
 
   it("appends the foreign block after the generated part", () => {
     const stub = renderStub(TARGETS[0]);
-    const out = withForeignBlocks(stub, foreignBlocks(`${stub}\n${ANTISLOP}\n`));
-    assert.ok(out.includes(ANTISLOP), "the other tool's block was dropped");
+    const out = withForeignBlocks(stub, foreignBlocks(`${stub}\n${OTHER}\n`));
+    assert.ok(out.includes(OTHER), "the other tool's block was dropped");
     assert.ok(out.startsWith(stub.trimEnd()), "the generated part must stay first and intact");
   });
 
   it("is idempotent — a second pass changes nothing", () => {
     const stub = renderStub(TARGETS[0]);
-    const once = withForeignBlocks(stub, foreignBlocks(`${stub}\n${ANTISLOP}\n`));
+    const once = withForeignBlocks(stub, foreignBlocks(`${stub}\n${OTHER}\n`));
     const twice = withForeignBlocks(stub, foreignBlocks(once));
     assert.equal(twice, once);
   });
@@ -94,14 +94,14 @@ describe("withForeignBlocks", () => {
     // feature by SHOWING the marker syntax, that example was read back as a real
     // block, and the file grew three lines on every run. Prose describing a
     // marker is not a block, whoever wrote it.
-    const stub = `${renderStub(TARGETS[0])}\n${ANTISLOP}\n`;
+    const stub = `${renderStub(TARGETS[0])}\n${OTHER}\n`;
     assert.equal(withForeignBlocks(stub, foreignBlocks(stub)), stub);
   });
 
   it("carries several tools' blocks across together", () => {
     const stub = renderStub(TARGETS[0]);
-    const out = withForeignBlocks(stub, foreignBlocks(`${stub}\n${ANTISLOP}\n\n${BEADS}\n`));
-    assert.ok(out.includes(ANTISLOP));
+    const out = withForeignBlocks(stub, foreignBlocks(`${stub}\n${OTHER}\n\n${BEADS}\n`));
+    assert.ok(out.includes(OTHER));
     assert.ok(out.includes(BEADS));
   });
 });
@@ -117,19 +117,19 @@ describe("sync() on a real pointer file", () => {
       // 1. Another installer appends its block. The file HAS changed, so `--check`
       //    is right to say so — that contract is exact and stays exact: it
       //    answers "would `agents:sync` rewrite this file?", nothing looser.
-      writeFileSync(path, `${original.trimEnd()}\n\n${ANTISLOP}\n`);
+      writeFileSync(path, `${original.trimEnd()}\n\n${OTHER}\n`);
       assert.deepEqual(sync({ check: true }).stale, ["GEMINI.md"]);
 
       // 2. So you run what the message tells you to. THIS is what was broken:
       //    it used to delete the other tool's work, which is why the advice was
       //    worse than the problem.
       sync();
-      assert.ok(readFileSync(path, "utf8").includes(ANTISLOP), "agents:sync deleted the other tool's block");
+      assert.ok(readFileSync(path, "utf8").includes(OTHER), "agents:sync deleted the other tool's block");
 
       // 3. And now it settles: the gate is green and stays green.
       assert.deepEqual(sync({ check: true }).stale, [], "the file never reaches a steady state");
       sync();
-      assert.ok(readFileSync(path, "utf8").includes(ANTISLOP));
+      assert.ok(readFileSync(path, "utf8").includes(OTHER));
       assert.deepEqual(sync({ check: true }).stale, []);
     } finally {
       writeFileSync(path, original);

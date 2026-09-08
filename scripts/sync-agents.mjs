@@ -107,11 +107,11 @@ export function sync({ check = false } = {}) {
   for (const target of TARGETS) {
     const path = at(target.path);
     const existing = readIfExists(path);
-    // Another tool may manage a fenced region of this same file — the anti-slop
-    // installer writes one into GEMINI.md, for instance. Regenerating wholesale
-    // deleted it, and before that the lint gate failed because the file no
-    // longer matched. Carry those regions across instead: this file owns the
-    // generated part, not the whole file.
+    // Another tool may manage a fenced region of this same file — rules
+    // installers commonly append one, and bd writes its own. Regenerating
+    // wholesale deleted it, and before that the lint gate failed because the
+    // file no longer matched. Carry those regions across instead: this script
+    // owns the generated part, not the whole file.
     const next = withForeignBlocks(renderStub(target), foreignBlocks(existing));
     if (check) {
       if (existing !== next) stale.push(target.path);
