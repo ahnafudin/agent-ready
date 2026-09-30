@@ -419,7 +419,7 @@ function main(argv) {
     }
     default:
       process.stderr.write(
-        "usage: stacks.mjs <list | show <id> | detect [dir] | doc [dir] | apply [dir] [--force]>\n",
+        "usage: stacks.mjs <validate | list | show <id> | detect [dir] | doc [dir] | apply [dir] [--force]>\n",
       );
       process.exit(cmd ? 1 : 0);
   }

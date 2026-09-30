@@ -4,6 +4,7 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -36,5 +37,11 @@ describe("CLI flag handling", () => {
     const r = spawnSync(process.execPath, [script("gate.mjs"), "--list"], { encoding: "utf8" });
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stderr, /source:/, "--list must still list");
+  });
+
+  it("names every stacks.mjs command in its usage line", () => {
+    const commands = [...readFileSync(script("stacks.mjs"), "utf8").matchAll(/case "([a-z]+)":/g)].map((m) => m[1]);
+    const usage = spawnSync(process.execPath, [script("stacks.mjs")], { encoding: "utf8" }).stderr;
+    for (const command of commands) assert.match(usage, new RegExp(`\\b${command}\\b`), `usage omits ${command}`);
   });
 });
