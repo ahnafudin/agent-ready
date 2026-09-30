@@ -1,7 +1,7 @@
 {
   "name": "my-project",
   "private": true,
-  "version": "0.11.2",
+  "version": "0.13.2",
   "type": "module",
   "description": "TODO:fill — one-line project description",
   "engines": {
@@ -14,6 +14,7 @@
     "hooks:install": "node scripts/install-hooks.mjs",
     "gate": "node scripts/gate.mjs",
     "gate:list": "node scripts/gate.mjs --list",
+    "slop": "node scripts/slop-check.mjs",
     "test:tooling": "node scripts/tests/run.mjs",
     "stack:detect": "node scripts/stacks.mjs detect",
     "stack:list": "node scripts/stacks.mjs list",

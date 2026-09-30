@@ -1,27 +1,12 @@
 #!/usr/bin/env node
-// scripts/sync-agents.mjs — one set of rules, many front doors.
-//
-// AGENTS.md is canonical. Most agents (Codex, Cursor, Copilot's coding agent,
-// Jules, Amp, Zed, Devin …) read it directly; the rest each look for their own
-// filename and would otherwise open this repo with ZERO rules loaded. So we
-// generate a small pointer file for each of those.
-//
-// The pointer is deliberately not a bare "see AGENTS.md": an agent that does not
-// follow file references would then be bound by nothing. Each stub therefore
-// restates the non-negotiable rules inline and points at AGENTS.md for the rest.
-// Short enough to cost nothing, complete enough to be safe on its own.
-//
-// Symlinks were the obvious alternative and are the wrong tool: git checkouts on
-// Windows default to `core.symlinks=false`, which turns each one into a text file
-// containing a path. A generated file works everywhere.
-//
-//   node scripts/sync-agents.mjs           write/refresh every pointer file
-//   node scripts/sync-agents.mjs --check   report drift, write nothing (exit 1 if stale)
+// scripts/sync-agents.mjs — writes a pointer file for each agent that does not read AGENTS.md itself.
+// Each restates the non-negotiables inline, for agents that never open a linked file. Files, not symlinks:
+// Windows checkouts turn symlinks into text. `--check` reports drift and writes nothing.
 
 import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { at, foreignBlocks, parseFlags, readIfExists, withForeignBlocks, writeIfChanged } from "./lib/util.mjs";
+import { at, foreignBlocks, parseFlags, readIfExists, ROOT, withForeignBlocks, writeIfChanged } from "./lib/util.mjs";
 
 const CANONICAL = "AGENTS.md";
 
@@ -52,6 +37,7 @@ const NON_NEGOTIABLE = [
   "**Verify before claiming.** \"Done\", \"fixed\" and \"passing\" require real `npm run gate` output. Never report success from inspection alone.",
   "**Finish 100%.** One task complete — code, tests, gates green — before starting the next.",
   "**No duplication.** Anything used from 2+ places gets extracted into a shared util. No dead code, no orphan files.",
+  "**No AI slop.** A comment is a short summary of what the code cannot say — three lines at most, never history; `npm run gate` fails otherwise. No filler words, invented numbers or generic UI. Rules: `docs/anti-slop/`.",
   "**Never commit or push unless the owner asks**, and never rewrite pushed history.",
   "**One author per commit.** Do not add a `Co-Authored-By` line — not for yourself, not for anyone — nor a \"Generated with …\" line or a session link, whichever tool you are. A `commit-msg` hook removes every such trailer and CI fails the build if one lands anyway. Credit collaborators in the commit body instead.",
   "**Ask ONE question when genuinely unsure** instead of guessing.",
@@ -65,6 +51,7 @@ const ROUTES = [
   ["`docs/TASKS.md`", "the phase checklist"],
   ["`docs/VERSIONING.md`", "release and version-bump rules"],
   ["`docs/archive/`", "full build history — read before deep work on a domain that has one"],
+  ["`docs/anti-slop/`", "rules against AI slop in code, UI, copy and reports"],
 ];
 
 export function renderStub(target) {
@@ -101,17 +88,13 @@ export function renderStub(target) {
   return lines.join("\n");
 }
 
-export function sync({ check = false } = {}) {
+export function sync({ check = false, root = ROOT } = {}) {
   const stale = [];
   const written = [];
   for (const target of TARGETS) {
-    const path = at(target.path);
+    const path = join(root, target.path);
     const existing = readIfExists(path);
-    // Another tool may manage a fenced region of this same file — rules
-    // installers commonly append one, and bd writes its own. Regenerating
-    // wholesale deleted it, and before that the lint gate failed because the
-    // file no longer matched. Carry those regions across instead: this script
-    // owns the generated part, not the whole file.
+    // Keep fenced regions other tools (bd, rules installers) manage in this file; we own only the rest.
     const next = withForeignBlocks(renderStub(target), foreignBlocks(existing));
     if (check) {
       if (existing !== next) stale.push(target.path);

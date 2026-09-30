@@ -1,7 +1,4 @@
-# Keep the repository LF-only, matching .editorconfig's `[*] end_of_line = lf`.
-# `text=auto` lets git detect binaries; `eol=lf` normalises the working tree, so
-# a Windows checkout cannot slip CRLF into a shell hook — /bin/sh rejects a CRLF
-# shebang, which is how the auto-version hook silently dies on macOS/Linux.
+# LF-only, matching .editorconfig: /bin/sh rejects a CRLF shebang, so a shell hook would die silently.
 * text=auto eol=lf
 
 # Windows-only scripts genuinely need CRLF.

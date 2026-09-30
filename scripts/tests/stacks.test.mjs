@@ -1,7 +1,4 @@
-// Tests for scripts/stacks.mjs — the framework registry. Two jobs here:
-// keep the DATA honest (schema + invariants, so a bad entry fails `npm run gate`
-// instead of mis-detecting someone's project months later), and pin the
-// detection rules that are easy to get subtly wrong.
+// Guards scripts/stacks.mjs: the registry's schema and invariants, and the detection rules easy to get subtly wrong.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -68,15 +65,7 @@ describe("registry integrity", () => {
   });
 
   it("warns in the generated doc about an entry that is not verified", () => {
-    // The promise in the docs is honesty, not omniscience: an entry nobody has
-    // run must SAY so rather than look authoritative.
-    //
-    // This used to assert that at least one entry WAS unverified — a fair guard
-    // while the registry was young, since it caught someone flipping the flag
-    // without doing the work. It stopped being fair once CI had genuinely
-    // verified all 70: keeping it would have meant keeping a fake unverified
-    // entry forever to satisfy a test. So it tests the MECHANISM instead, which
-    // is what actually has to keep working; earning the flag is CI's job.
+    // An entry nobody has run must SAY so; a synthetic entry tests the mechanism, whatever the registry holds.
     const shaky = { ...resolve(stacks, "express"), id: "shaky", verified: false };
     const doc = renderDoc({ primary: shaky, secondary: [], ranked: [] }, { test: "npm test" });
     assert.match(doc, /Unverified commands/);
@@ -224,10 +213,7 @@ describe("detection", () => {
   });
 
   it("does not let infrastructure hijack an application repo", () => {
-    // Found in CI: slim-skeleton ships a docker-compose.yml, and the compose
-    // entry took the tie alphabetically. A compose file, a chart or some .tf
-    // sits ALONGSIDE an app in a large share of real repos, so those entries
-    // carry a negative weight and lose every tie.
+    // A compose file, chart or .tf often sits ALONGSIDE an app, so those entries carry a negative weight and lose ties.
     const dir = repo({
       "composer.json": pkg({ require: { "slim/slim": "^4" } }),
       "docker-compose.yml": "services: { web: { image: php } }",
@@ -241,8 +227,7 @@ describe("detection", () => {
   });
 
   it("finds a build file in a subdirectory, not just the repo root", () => {
-    // Ktor matched nothing at all in CI: `gradle init` writes app/build.gradle.kts
-    // and the pattern could only see the root.
+    // `gradle init` writes app/build.gradle.kts, so the pattern must look below the root.
     const dir = repo({
       "settings.gradle.kts": 'rootProject.name = "fx"',
       "app/build.gradle.kts": 'dependencies { implementation("io.ktor:ktor-server-core:3.0.0") }',
@@ -307,9 +292,7 @@ describe("generated docs/STACK.md", () => {
   });
 
   it("warns loudly when a stack's commands are unverified", () => {
-    // Synthetic rather than "whichever entry happens to be unverified today":
-    // this broke the moment codeigniter4 earned its `verified: true`, and the
-    // subject here is renderDoc's banner, not the registry's current state.
+    // Synthetic, not whichever entry is unverified today: the subject is renderDoc's banner, not the registry.
     const primary = { ...resolve(stacks, "laravel"), verified: false };
     const doc = renderDoc({ primary, secondary: [] }, mergeGates(primary, []));
     assert.match(doc, /Unverified commands/i);
@@ -328,11 +311,7 @@ describe("generated docs/STACK.md", () => {
 });
 
 describe("apply(): agent-ready's own gates must not survive into a project", () => {
-  // Found by actually generating an Electron app from agent-ready: the new
-  // project inherited agent-ready's maintenance gates (validate the registry,
-  // check the generated agent files) and — because they were non-empty — the
-  // "never clobber hand-tuned gates" rule preserved them forever. `npm run gate`
-  // reported green having never once run the Electron build.
+  // These are non-empty, so the never-clobber rule would keep them and the gate would never run the project's build.
   const OWN_GATES = {
     lint: ["node scripts/sync-agents.mjs --check", "node scripts/stacks.mjs validate"],
     typecheck: null,
@@ -390,10 +369,7 @@ describe("apply() aimed at another project", () => {
   const OWN_STACK_DOC = fileURLToPath(new URL("../../docs/STACK.md", import.meta.url));
 
   it("creates docs/ in a project that has none", () => {
-    // Every fixture above manufactures `docs/.keep`, which is exactly why this
-    // was invisible: apply writes docs/STACK.md, and a real fresh project has no
-    // docs/ at all. It threw ENOENT — AFTER rewriting package.json, so the
-    // project was left half-configured and the stack trace blamed the wrong file.
+    // The fixtures above all create docs/; a real fresh project has none, and failing here leaves it half-configured.
     const dir = repo({ "package.json": pkg({ name: "fresh", dependencies: { express: "4.19.0" } }) });
     assert.equal(existsSync(join(dir, "docs")), false, "the fixture must not pre-create docs/");
     const result = apply({ root: dir });
@@ -402,10 +378,7 @@ describe("apply() aimed at another project", () => {
   });
 
   it("writes to the directory named on the command line, not to agent-ready", () => {
-    // The bug this pins: the CLI called `apply({ force })` and never passed the
-    // directory, so `stacks.mjs apply ../my-app` configured THIS REPO instead.
-    // `detect` already took a directory, which is what made the pair look
-    // symmetrical and the omission invisible. It is the one command that writes.
+    // `apply` is the one command that writes, so it must configure the named directory, never this repo.
     const dir = repo({ "package.json": pkg({ name: "elsewhere", dependencies: { express: "4.19.0" } }) });
     const before = readFileSync(OWN_STACK_DOC, "utf8");
 

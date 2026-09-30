@@ -1,48 +1,16 @@
 #!/bin/sh
 # vibe:hook — owned by scripts/install-hooks.mjs; edit .githooks/, never a copy.
-# Strip AI-agent attribution from commit messages, whichever agent wrote them.
-#
-# Claude Code can be told not to add it (settings.json -> attribution), and so
-# can some others. But every agent has its own switch, a new one arrives every
-# few months, and a single missed setting puts a bot in your GitHub contributor
-# list permanently. A commit-msg hook is the one place that catches all of them,
-# including agents nobody has configured yet.
-#
-# It removes:
-#   Co-authored-by:  EVERY such line — see the note on the rule below
-#   Claude-Session:  and similar session-link trailers
-#   "Generated with ..." / "🤖 Generated with ..." lines
-#
-# Fail-soft by design: any problem leaves the message untouched rather than
-# losing what you wrote.
+# Strip AI-agent attribution (co-author, session and "Generated with" lines) from every commit message.
+# Fail-soft: any problem leaves the message untouched.
 
 MSG="$1"
 [ -n "$MSG" ] && [ -f "$MSG" ] || exit 0
 
 TMP="$MSG.vibe-attr"
 
-# THE RULE: this project's commits have exactly one author. Every
-# `Co-authored-by:` line is removed, agent or human.
-#
-# That is a deliberate choice, and a stricter one than it looks. Matching agents
-# by name was tried and was worse: case-insensitively, "Amp" matches inside
-# "example.com", which deleted a real person's trailer during testing. Matching
-# by bot ADDRESS fixed that, but left a list that has to grow every time a new
-# agent ships — and one missed entry is permanent, because a co-author trailer
-# puts that account in the repository's GitHub contributor list and only a
-# rewrite of published history takes it back out.
-#
-# Removing all of them needs no list, cannot fall behind, and cannot mistake a
-# person for a bot. The cost is that a genuine human collaborator is not
-# credited in the trailer either; credit them in the commit body instead.
-#
-# To keep human co-authors, restore the bot-address form:
-#   BOTS='noreply@anthropic\.com|@cursor\.com|Copilot@users\.noreply\.github\.com'
-#   ...(Co-authored-by:[[:space:]]*.*($BOTS)|...
-#
-# The session and "Generated with" lines stay name-based but anchored, so a
-# commit body that merely DISCUSSES attribution (this repo does, at length) is
-# not silently rewritten.
+# One author per commit: EVERY Co-authored-by line goes, so no bot list can fall behind or match a person.
+# Credit a human collaborator in the commit body instead.
+# The other lines are anchored, so a body that merely discusses attribution is kept.
 PATTERN="^[[:space:]]*(Co-authored-by:|(Claude|Cursor|Codex|Copilot)-(Code-)?Session:|(🤖[[:space:]]*)?Generated with[[:space:]]*\[?(Claude Code|Cursor|Copilot|Codex|opencode))"
 
 grep -viE "$PATTERN" "$MSG" > "$TMP" 2>/dev/null || true

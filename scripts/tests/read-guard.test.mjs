@@ -1,11 +1,5 @@
-// The read guard: deny an unbounded Read of a long file, and nothing else.
-//
-// A hook that refuses too much stalls every session in the project, and one
-// that refuses nothing is dead weight the README advertises. So these tests pin
-// both edges — the exact threshold, and the way through (offset/limit) — plus
-// the promise that every failure lets the Read proceed. The last block checks
-// the wiring itself: a guard that .claude/settings.json does not reach, or
-// reaches by a path that breaks once the agent runs `cd`, protects nothing.
+// The read guard denies an unbounded Read of a long file and nothing else: the threshold, the way through,
+// fail-open, and the wiring in .claude/settings.json.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -143,10 +137,7 @@ describe("the wiring in .claude/settings.json", () => {
   });
 
   it("reaches the script from the project root, not the current directory", () => {
-    // Hooks run in the agent's CURRENT directory, which follows every `cd`. A
-    // relative `node scripts/read-guard.mjs` would stop finding the script the
-    // first time the agent changed directory — and a hook that cannot start
-    // does not deny, so the guard would vanish silently.
+    // Hooks run in the agent's current directory, so a relative path silently loses the guard after a `cd`.
     const [guard] = guards;
     assert.equal(guard.command, "node", "exec form: no shell has to parse the path");
     assert.deepEqual(guard.args, ["${CLAUDE_PROJECT_DIR}/scripts/read-guard.mjs"]);

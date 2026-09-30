@@ -1,18 +1,5 @@
-# Verify registry entries against real, upstream-scaffolded projects.
-#
-# `verified` in scripts/stacks.json claims two things: these detection markers
-# match the real framework, and these gate commands actually run. Neither can be
-# checked from inside this repo — a fixture written by hand only echoes back what
-# the registry already says. It needs the framework's own scaffolder and its own
-# toolchain.
-#
-# Doing that locally means installing PHP, a JDK, the .NET SDK, Ruby, Bun and
-# Swift on somebody's machine. GitHub's ubuntu runners already have most of them,
-# so this runs there instead and costs no disk anywhere.
-#
-# It is also scheduled, because `verified` rots. Angular's test gate was verified
-# once and then silently broke when Angular moved from Karma to Vitest; nothing
-# would have caught that except running it again.
+# Verify registry entries against projects made by each framework's own scaffolder and toolchain.
+# A hand-written fixture only echoes the registry back, and `verified` rots, so this also runs monthly.
 name: verify-stacks
 
 on:
@@ -39,10 +26,8 @@ jobs:
       matrix:
         include:
           # ---- PHP (php + composer are preinstalled) ----
-          # appstarter's phpunit config asks for coverage, so phpunit exits 1 on a
-          # runner WARNING when xdebug is missing — with every test passing. The
-          # gate command is right and so is the project's config; the runner is
-          # what was short, so it gets xdebug rather than the project getting edited.
+          # appstarter's phpunit config wants coverage and exits 1 without xdebug,
+          # so the runner gets xdebug rather than the project being edited.
           - id: codeigniter4
             setupPhp: true
             scaffold: composer create-project codeigniter4/appstarter fixture --no-interaction
@@ -50,16 +35,8 @@ jobs:
           - id: slim
             scaffold: composer create-project slim/slim-skeleton fixture --no-interaction
 
-          # WordPress has no upstream project creator, so this builds the minimum
-          # a theme actually is: the style.css header the entry detects, plus the
-          # tools its gates name. If phpcs needs `installed_paths` to find the
-          # WordPress standard, this run is how we find out.
-          # Only the lint gate runs here, and that is the whole of what this
-          # entry claims. Its `test` gate is `vendor/bin/phpunit`, inherited
-          # unchanged from the php base and already verified by codeigniter4 and
-          # slim — while a REAL WordPress suite needs the WP test harness and a
-          # MySQL database. Running bare phpunit against a bare theme would only
-          # prove that phpunit prints its own help, which is what it did.
+          # WordPress has no project creator: build the minimal theme the entry detects plus its lint tools.
+          # Only lint runs; the phpunit gate comes from the php base, and a real WP suite needs MySQL.
           - id: wordpress
             only: lint
             scaffold: |
@@ -73,10 +50,8 @@ jobs:
               # Only wpcs is named; composer resolves PHPCSUtils and PHPCSExtra to a
               # matching set on its own.
               composer require --dev --no-interaction wp-coding-standards/wpcs phpunit/phpunit
-              # No manual `--config-set installed_paths` here: pointing phpcs at
-              # wpcs alone hid PHPCSExtra, whose Universal.* sniffs wpcs itself
-              # references ("Referenced sniff ... does not exist"). The composer
-              # plugin allowed above registers every installed standard.
+              # No manual `installed_paths`: it hides PHPCSExtra's sniffs that wpcs references.
+              # The composer plugin allowed above registers every installed standard.
               vendor/bin/phpcs -i
 
           # ---- JVM ----
@@ -120,8 +95,7 @@ jobs:
               printf 'source "https://rubygems.org"\n' > Gemfile
               printf 'gem "sinatra"\ngem "rackup"\ngem "rspec"\ngem "rubocop"\n' >> Gemfile
               bundle install
-              # rubocop failed the fixture's own Gemfile (7 style offences) — it was
-              # right to. A real project's code is rubocop-clean before the gate runs.
+              # Autocorrect the fixture's own Gemfile; a real project is rubocop-clean before the gate runs.
               bundle exec rubocop -A || true
 
           # ---- Bun ----
@@ -152,11 +126,8 @@ jobs:
             detectOnly: true
             scaffold: mkdir -p fixture && printf 'config_version=5\n' > fixture/project.godot
 
-          # Unity's BUILD needs the editor and a licence, so it is not built here.
-          # But the entry declares no gates at all, so detection is the only thing
-          # that can be wrong — and Assets/ + ProjectSettings/ is what a Unity
-          # project is. That much is checkable without Unity, so it is checked
-          # rather than left as a permanent unknown.
+          # Unity's build needs the editor and a licence, but the entry declares no gates,
+          # so detection (Assets/ + ProjectSettings/) is all there is to check.
           - id: unity
             detectOnly: true
             scaffold: |

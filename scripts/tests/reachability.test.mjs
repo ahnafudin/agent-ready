@@ -1,19 +1,5 @@
-// Every registry entry must be REACHABLE.
-//
-// A fixture is built from each entry's own `detect` block, so this deliberately
-// does NOT check that the markers are the right ones for that framework — that
-// needs ground truth from outside the registry (official docs, a real scaffold),
-// and no self-referential test can supply it.
-//
-// What it does prove is not circular, and is the failure this registry is most
-// prone to: an entry whose markers are present and STILL loses, because another
-// entry outranks it on the same evidence. `avalonia` and `maui` both key off a
-// `.csproj`; `slim` and `laravel` both off `composer.json`; every framework
-// competes with its own language base. An entry that can never win is dead
-// weight the README advertises as support agent-ready does not actually have.
-//
-// The counterpart — are these the CORRECT markers — is tracked per entry by the
-// `verified` flag and is settled by scaffolding the real thing.
+// Guards that every registry entry wins in a repo built from its own `detect` markers, not outranked by another.
+// It cannot prove the markers are correct; the per-entry `verified` flag tracks that.
 
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";

@@ -1,20 +1,12 @@
-// Two generators, one file.
-//
-// `agents:sync` rewrites its pointer files wholesale, which was fine while it
-// was the only tool writing them. It is not: rules installers commonly append a
-// fenced region to CLAUDE.md, AGENTS.md or GEMINI.md, and bd writes a BEGIN/END
-// block of its own. Before this, installing any of them broke `npm run gate` —
-// the pointer file no longer matched what the generator produces — and the fix
-// the error message suggested, `npm run agents:sync`, deleted the other tool's
-// work.
-//
-// So the rule is: this repo owns the GENERATED part of those files, not the
-// whole file.
+// Guards that `agents:sync` owns only the generated part of a pointer file, never the whole file.
+// Rules installers and bd append their own fenced blocks to CLAUDE.md, AGENTS.md or GEMINI.md.
 
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { readFileSync, writeFileSync } from "node:fs";
-import { at, foreignBlocks, withForeignBlocks } from "../lib/util.mjs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { foreignBlocks, withForeignBlocks } from "../lib/util.mjs";
 import { renderStub, sync, TARGETS } from "../sync-agents.mjs";
 
 const OTHER = ["<!-- other-tool:start -->", "- a line the other tool manages.", "<!-- other-tool:end -->"].join("\n");
@@ -45,11 +37,7 @@ describe("foreignBlocks", () => {
   });
 
   it("does not read a single line of prose as a block", () => {
-    // The bug this pins was shipped, and it was self-concealing. A banner line
-    // that documented the feature by naming both markers inline was read as a
-    // real block, preserved into six generated files, and then kept for ever —
-    // the files were self-consistent, so `--check` called them current while
-    // they held garbage. A marker must sit ALONE on its line to fence anything.
+    // A marker must sit ALONE on its line; prose naming both markers inline would be kept for ever.
     const prose = "A region marked <!-- name:start --> … <!-- name:end --> is preserved.";
     assert.deepEqual(foreignBlocks(prose), []);
     const trailing = ["text <!-- x:start -->", "body", "<!-- x:end --> trailing"].join("\n");
@@ -90,10 +78,7 @@ describe("withForeignBlocks", () => {
   });
 
   it("never treats the generator's own output as foreign", () => {
-    // The bug this pins was self-inflicted: the stub's banner explained the
-    // feature by SHOWING the marker syntax, that example was read back as a real
-    // block, and the file grew three lines on every run. Prose describing a
-    // marker is not a block, whoever wrote it.
+    // The stub's banner shows the marker syntax; reading it back as a block would grow the file every run.
     const stub = `${renderStub(TARGETS[0])}\n${OTHER}\n`;
     assert.equal(withForeignBlocks(stub, foreignBlocks(stub)), stub);
   });
@@ -107,32 +92,29 @@ describe("withForeignBlocks", () => {
 });
 
 describe("sync() on a real pointer file", () => {
-  // The unit tests above prove the pieces. This proves they are actually wired
-  // together, which is the part that was broken: `sync()` composed renderStub
-  // alone, so everything else could be correct and the file still got wiped.
+  // Proves the pieces above are wired together: every piece can be right and sync() still wipe the file.
+  // Runs in a scratch root: the suite runs in parallel, and other tests copy this checkout.
   it("keeps another tool's block instead of deleting it", () => {
-    const path = at(TARGETS.find((t) => t.path === "GEMINI.md").path);
-    const original = readFileSync(path, "utf8");
+    const root = mkdtempSync(join(tmpdir(), "sync-"));
     try {
-      // 1. Another installer appends its block. The file HAS changed, so `--check`
-      //    is right to say so — that contract is exact and stays exact: it
-      //    answers "would `agents:sync` rewrite this file?", nothing looser.
-      writeFileSync(path, `${original.trimEnd()}\n\n${OTHER}\n`);
-      assert.deepEqual(sync({ check: true }).stale, ["GEMINI.md"]);
+      sync({ root });
+      const path = join(root, "GEMINI.md");
 
-      // 2. So you run what the message tells you to. THIS is what was broken:
-      //    it used to delete the other tool's work, which is why the advice was
-      //    worse than the problem.
-      sync();
+      // 1. Another installer appends its block; `--check` rightly says `agents:sync` would rewrite the file.
+      writeFileSync(path, `${readFileSync(path, "utf8").trimEnd()}\n\n${OTHER}\n`);
+      assert.deepEqual(sync({ root, check: true }).stale, ["GEMINI.md"]);
+
+      // 2. Running what the message says must keep the other tool's block.
+      sync({ root });
       assert.ok(readFileSync(path, "utf8").includes(OTHER), "agents:sync deleted the other tool's block");
 
       // 3. And now it settles: the gate is green and stays green.
-      assert.deepEqual(sync({ check: true }).stale, [], "the file never reaches a steady state");
-      sync();
+      assert.deepEqual(sync({ root, check: true }).stale, [], "the file never reaches a steady state");
+      sync({ root });
       assert.ok(readFileSync(path, "utf8").includes(OTHER));
-      assert.deepEqual(sync({ check: true }).stale, []);
+      assert.deepEqual(sync({ root, check: true }).stale, []);
     } finally {
-      writeFileSync(path, original);
+      rmSync(root, { recursive: true, force: true });
     }
   });
 });

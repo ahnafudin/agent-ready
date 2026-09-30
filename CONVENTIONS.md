@@ -14,6 +14,7 @@
 - **Verify before claiming.** "Done", "fixed" and "passing" require real `npm run gate` output. Never report success from inspection alone.
 - **Finish 100%.** One task complete — code, tests, gates green — before starting the next.
 - **No duplication.** Anything used from 2+ places gets extracted into a shared util. No dead code, no orphan files.
+- **No AI slop.** A comment is a short summary of what the code cannot say — three lines at most, never history; `npm run gate` fails otherwise. No filler words, invented numbers or generic UI. Rules: `docs/anti-slop/`.
 - **Never commit or push unless the owner asks**, and never rewrite pushed history.
 - **One author per commit.** Do not add a `Co-Authored-By` line — not for yourself, not for anyone — nor a "Generated with …" line or a session link, whichever tool you are. A `commit-msg` hook removes every such trailer and CI fails the build if one lands anyway. Credit collaborators in the commit body instead.
 - **Ask ONE question when genuinely unsure** instead of guessing.
@@ -29,6 +30,7 @@
 | the phase checklist | `docs/TASKS.md` |
 | release and version-bump rules | `docs/VERSIONING.md` |
 | full build history — read before deep work on a domain that has one | `docs/archive/` |
+| rules against AI slop in code, UI, copy and reports | `docs/anti-slop/` |
 
 Cross-session issues live in **beads** (`bd ready`, `bd show <id>`, `bd update <id> --claim`,
 `bd close <id>`); `docs/TASKS.md` is the roadmap checklist, not an issue queue. If `bd` is not

@@ -1,11 +1,4 @@
-// Tests for the shared gate runner.
-//
-// `runGates` is the single place gates actually execute: `npm run gate` calls
-// it, and so does verify-stack.mjs, which is what CI trusts when it marks a
-// registry entry verified. That makes one of its failure modes worse than a
-// crash — selecting NO gates and returning ok. A green that means "I did not
-// look" is indistinguishable from a green that means "I checked", and the
-// second caller had no CLI validation to catch it.
+// The shared gate runner: selecting no gate must fail, never pass having run nothing.
 
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";

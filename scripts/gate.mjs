@@ -1,30 +1,16 @@
 #!/usr/bin/env node
-// scripts/gate.mjs — the ONE command every agent needs to know, whatever the
-// language: `npm run gate`. It runs the quality gates declared in package.json
-// under `vibe.gates`, in a fixed order, stopping at the first failure.
-//
-//   npm run gate              lint → typecheck → test → build (skipping empties)
-//   npm run gate test         just one gate
-//   npm run gate:list         show what is configured, run nothing
-//
-// Note the dedicated `gate:list` script: `npm run gate --list` would NOT work,
-// because npm swallows a leading flag instead of forwarding it — you would get a
-// full gate run instead of a listing. Non-flag args (`npm run gate test`) do pass
-// through. Calling this file directly (`node scripts/gate.mjs --list`) is fine.
-//
-// A gate value is a shell line, an ordered list of them (a polyglot repo such as
-// Tauri runs the web AND the Rust side), or ""/null meaning "this project has no
-// such gate" — declared absence is skipped quietly, it is not a failure.
-//
-// With no `vibe.gates` configured, the stack registry is consulted on the fly so
-// `npm run gate` still does something useful before `npm run setup` has ever run.
+// scripts/gate.mjs — `npm run gate`: the anti-slop check, then vibe.gates lint → typecheck → test → build.
+// `npm run gate test` runs one gate; `npm run gate:list` lists them (npm swallows a leading `--list`).
 
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { at, parseFlags, readJson } from "./lib/util.mjs";
+import { reportSlop } from "./slop-check.mjs";
 import { detectResolved, mergeGates } from "./stacks.mjs";
 
 const ORDER = ["lint", "typecheck", "test", "build"];
+/** Built in and always first, so no stack's gate set can drop it. */
+const SLOP = "slop";
 // 127 = POSIX "command not found"; 9009 = the cmd.exe equivalent on Windows.
 const NOT_FOUND = new Set([127, 9009]);
 
@@ -57,23 +43,10 @@ function run(cmd, cwd) {
   return { ok: code === 0, code, reason: NOT_FOUND.has(code) ? "command not found" : "" };
 }
 
-/**
- * Run a gate set in order, stopping at the first failure.
- *
- * Exported because CI verifies a framework by scaffolding a real app elsewhere
- * and running THAT project's gates — the same runner, the same semantics and the
- * same "command not found" hint, rather than a second implementation that drifts
- * away from this one.
- */
+/** Runs a gate set in order, stopping at the first failure. Shared with verify-stack.mjs. */
 export function runGates(gates, { cwd = at(), only = [] } = {}) {
   const keys = gateOrder(gates);
-  // An `only` naming no real gate must NOT be a pass. Filtering alone selects
-  // nothing, the loop below never runs, and this returns ok:true having checked
-  // nothing at all — a green that means "I did not look". gate.mjs's own CLI
-  // catches that, but verify-stack.mjs calls straight in here and reported
-  // `PASSED :` with an empty list, which is how an entry could be marked
-  // verified without a single gate having run. The guard belongs in the runner,
-  // where every caller gets it, not in one caller's argument parsing.
+  // An `only` naming no real gate must fail — selecting nothing would otherwise report a pass.
   const unknown = only.filter((k) => !keys.includes(k));
   if (unknown.length) {
     return {
@@ -96,6 +69,18 @@ export function runGates(gates, { cwd = at(), only = [] } = {}) {
   return { ok: true, passed, failed: null };
 }
 
+function fail(failed, code, reason, passed) {
+  process.stderr.write(`\n\x1b[31m[gate] FAILED at \`${failed}\` (exit ${code})${reason ? ` — ${reason}` : ""}\x1b[0m\n`);
+  if (reason === "command not found") {
+    process.stderr.write(
+      "       This command came from the framework registry and may be unverified.\n" +
+        "       Correct it in package.json → `vibe.gates`; see docs/STACK.md.\n",
+    );
+  }
+  if (passed.length) process.stderr.write(`       Already passed: ${passed.join(", ")}\n`);
+  return 1;
+}
+
 function main(argv) {
   const { positional: only, flags, problems } = parseFlags(argv, { known: ["--list"] });
   if (problems.length) {
@@ -103,9 +88,27 @@ function main(argv) {
     process.stderr.write("usage: gate.mjs [--list] [gate ...]\n");
     return 2;
   }
-  const list = flags.has("--list");
   const { gates, source } = loadGates();
   const keys = gateOrder(gates);
+
+  if (flags.has("--list")) {
+    process.stderr.write(`[gate] source: ${source}\n`);
+    process.stderr.write(`  ${SLOP.padEnd(10)} node scripts/slop-check.mjs (built in, always first)\n`);
+    for (const k of keys) for (const c of asList(gates[k])) process.stderr.write(`  ${k.padEnd(10)} ${c}\n`);
+    return 0;
+  }
+
+  const rest = only.filter((k) => k !== SLOP);
+  const passed = [];
+  if (only.length === 0 || only.includes(SLOP)) {
+    process.stderr.write("\n\x1b[36m$ node scripts/slop-check.mjs\x1b[0m\n");
+    if (reportSlop() !== 0) return fail(SLOP, 1, "", passed);
+    passed.push(SLOP);
+    if (only.length && rest.length === 0) {
+      process.stderr.write(`\n\x1b[32m[gate] PASSED: ${SLOP}\x1b[0m\n`);
+      return 0;
+    }
+  }
 
   if (keys.length === 0) {
     process.stderr.write(
@@ -116,33 +119,15 @@ function main(argv) {
     return 0;
   }
 
-  if (list) {
-    process.stderr.write(`[gate] source: ${source}\n`);
-    for (const k of keys) for (const c of asList(gates[k])) process.stderr.write(`  ${k.padEnd(10)} ${c}\n`);
-    return 0;
-  }
-
-  const selected = only.length ? keys.filter((k) => only.includes(k)) : keys;
-  if (only.length && selected.length === 0) {
-    process.stderr.write(`[gate] unknown gate: ${only.join(", ")} — available: ${keys.join(", ")}\n`);
+  const selected = rest.length ? keys.filter((k) => rest.includes(k)) : keys;
+  if (rest.length && selected.length === 0) {
+    process.stderr.write(`[gate] unknown gate: ${rest.join(", ")} — available: ${[SLOP, ...keys].join(", ")}\n`);
     return 1;
   }
 
   const r = runGates(gates, { only: selected });
-  if (!r.ok) {
-    process.stderr.write(
-      `\n\x1b[31m[gate] FAILED at \`${r.failed}\` (exit ${r.code})${r.reason ? ` — ${r.reason}` : ""}\x1b[0m\n`,
-    );
-    if (r.reason === "command not found") {
-      process.stderr.write(
-        "       This command came from the framework registry and may be unverified.\n" +
-          "       Correct it in package.json → `vibe.gates`; see docs/STACK.md.\n",
-      );
-    }
-    if (r.passed.length) process.stderr.write(`       Already passed: ${r.passed.join(", ")}\n`);
-    return 1;
-  }
-  process.stderr.write(`\n\x1b[32m[gate] PASSED: ${r.passed.join(" → ")}\x1b[0m\n`);
+  if (!r.ok) return fail(r.failed, r.code, r.reason, [...passed, ...r.passed]);
+  process.stderr.write(`\n\x1b[32m[gate] PASSED: ${[...passed, ...r.passed].join(" → ")}\x1b[0m\n`);
   return 0;
 }
 

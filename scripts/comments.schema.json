@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "comment syntax registry",
+  "description": "How each language writes comments, for the anti-slop comment check. Every entry is DATA, cites its official source, and is validated by scripts/tests/slop.test.mjs.",
+  "type": "object",
+  "required": ["languages", "skipped"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "languages": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/language" } },
+    "skipped": { "type": "array", "items": { "$ref": "#/definitions/skipped" } }
+  },
+  "definitions": {
+    "prefixes": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "language": {
+      "type": "object",
+      "required": ["id", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "extensions": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^\\.[a-z0-9.+_-]+$" } },
+        "filenames": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "interpreters": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[A-Za-z0-9._+-]+$" } },
+        "line": { "$ref": "#/definitions/prefixes" },
+        "block": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "minLength": 1 } }
+        },
+        "doc": { "$ref": "#/definitions/prefixes" },
+        "code": { "$ref": "#/definitions/prefixes" },
+        "source": { "type": "string", "pattern": "^https://" },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    },
+    "skipped": {
+      "type": "object",
+      "required": ["extensions", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "extensions": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^\\.[a-z0-9.+_-]+$" } },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

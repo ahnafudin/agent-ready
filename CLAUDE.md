@@ -36,6 +36,9 @@ These use Claude Code features other agents do not have. Everything else is in `
 - **Read guard:** a PreToolUse hook (`scripts/read-guard.mjs`) denies a Read with no
   offset/limit of a file over 400 lines. Grep for what you need and Read that window; pass
   `offset: 1, limit: N` when you truly need all of it. `READ_GUARD_MAX_LINES` moves the line.
+- **Slop guard:** after every Edit or Write, `scripts/slop-guard.mjs` names any comment block over
+  the limit in that file. Shorten it right away — `npm run gate` fails on the same check.
+- **`/anti-slop`:** reviews the current diff against `docs/anti-slop/` and lists what to fix.
 
 <!-- `bd setup claude` may append its own BEGIN/END BEADS INTEGRATION block below this line.
      Leave it alone — but note that the "Beads Issue Tracker" section of AGENTS.md OVERRIDES it

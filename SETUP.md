@@ -32,7 +32,10 @@ Then fill the placeholders — search for `TODO:fill`:
 
 - [ ] `AGENTS.md` — project name · Project summary · Stack table · Layer responsibilities ·
       Naming conventions · Conventions · Commands · design-token pointer in the
-      "Avoid AI-slop design" rule
+      "No AI slop" rule
+- [ ] `package.json` → `vibe.slop.ignore` — globs for vendored or generated code the comment check
+      should skip (`npm run slop` lists what it would flag today); `maxDocCommentLines` if your API
+      docs (`/**`, `///`) need more than three lines
 - [ ] `CLAUDE.md` — project name only (everything else is imported from `AGENTS.md`; **do not copy
       rules here**)
 - [ ] `package.json` — **`name` first, before anything else.** While it is still `my-project`,
@@ -83,21 +86,21 @@ still commits its own `.beads/config.yaml` for the second-machine flow).
 
 ## Keeping AI agents out of your contributor list
 
-Two layers, because one is never enough:
+Three layers, because a hook cannot run before it is installed:
 
 - **Per tool.** `.claude/settings.json` here (and `~/.claude/settings.json` for every project)
   sets `attribution: { commit: "", pr: "", sessionUrl: false }` plus the older
   `includeCoAuthoredBy: false`, so Claude Code adds no `Co-Authored-By`, no
   "Generated with Claude Code" line and no session link. Other tools each have their own
   switch — Cursor, Copilot and the rest are NOT covered by this file.
-- **For every tool at once.** `.githooks/commit-msg` strips agent attribution from the message
-  whatever wrote it, including agents nobody has configured yet. It identifies bots by their
-  address (`noreply@anthropic.com`, `@cursor.com`, …) rather than by product name — matching
-  names deletes a human collaborator called Claude, and case-insensitively "Amp" matches inside
-  "example.com".
+- **For every tool at once.** `.githooks/commit-msg` removes every `Co-authored-by` line, session
+  link and "Generated with" line, whatever wrote it. The rule is one author per commit: a list of
+  bot addresses always falls behind, and matching names deletes real people.
+- **In CI.** `.github/workflows/attribution.yml` fails the build if a commit carries one anyway —
+  the layer that covers a fresh clone where no hook is installed yet.
 
-A **human** co-author is always kept, and a commit body that merely discusses attribution is
-left alone. Both are covered by `scripts/tests/commit-msg.test.mjs`.
+Credit a collaborator in the commit body instead. A body that merely discusses attribution is left
+alone; `scripts/tests/commit-msg.test.mjs` covers both.
 
 ⚠️ Neither layer touches commits you have already pushed. Their messages are part of history,
 so removing attribution there means `git filter-repo` (or an interactive rebase) followed by a

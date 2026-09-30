@@ -29,6 +29,7 @@ loads the same contract instead of nothing.
 | `docs/` skeletons | `PRD` · `ARCHITECTURE` · `FEATURES` · `TASKS` · `ROADMAP` · `VERSIONING` — thin frames, not content. |
 | **Archive contract** | `docs/archive/STATUS_ARCHIVE.md` + `TASKS_ARCHIVE.md`: when work merges, its full story moves here and `AGENTS.md` keeps ≤ 1 bullet per domain — the always-loaded context never bloats. |
 | **Read guard** | `scripts/read-guard.mjs`, a Claude Code hook that denies reading a whole file over 400 lines without an offset/limit window, and says how to read the part you need instead. Whole files read to find one function are the largest single entries in a long session's context, and nothing takes them back out. |
+| **Anti-slop** | Rules for code, UI, copy and reports in `docs/anti-slop/`, enforced wherever a machine can check them: `npm run gate` runs a comment check first, in every language the registry knows, and in Claude Code `slop-guard` names a long comment right after the edit. |
 | **Beads issue tracker** | Optional `bd` wiring with rules reconciled for this workflow: bd = cross-session issues, `docs/TASKS.md` = roadmap checklist, no auto-push. Silent when bd is not installed, and refuses to initialise until you rename the project — bd commits an identity, which must not ship from agent-ready. |
 | **Auto-versioning** | A conventional-commit hook bumps semver in `package.json` and syncs **every other manifest that exists** — inside the same commit. |
 | **No agent attribution** | Three layers, because one bad commit is permanent — it puts a bot in your GitHub contributor list, removable only by rewriting published history. `.claude/settings.json` stops Claude Code adding `Co-Authored-By`, a "Generated with" line or a session link, and arms the hooks at session start; `.githooks/commit-msg` strips them whatever tool wrote them — Cursor, Copilot, or one that does not exist yet; and `.github/workflows/attribution.yml` fails the build if any commit carries them anyway, which is the layer that covers a fresh clone where no hook is installed yet. The rule is **one author per commit**: every `Co-Authored-By` line goes, not only an agent's, because separating the two was tried by name (which deleted a real person whose address contained "amp") and by bot address (a list that must grow with every new agent, where one miss is permanent). Credit collaborators in the commit body. |
@@ -126,7 +127,8 @@ Then open any AI coding tool and type your task — the rules ride along automat
 | Command | What it does |
 |---|---|
 | `npm run setup` | One-shot bootstrap. Idempotent; safe to re-run on any machine. |
-| **`npm run gate`** | **The one command that means "is this green?"** — lint → typecheck → test → build, stopping at the first failure. |
+| **`npm run gate`** | **The one command that means "is this green?"** — slop → lint → typecheck → test → build, stopping at the first failure. |
+| `npm run slop` | The comment check alone (`vibe.slop` in `package.json` sets the limit and ignored paths). |
 | `npm run gate test` | A single stage. |
 | `npm run gate:list` | What `gate` would run, without running it. |
 | `npm run stack:detect` | Which framework matched, its bases, and the full ranking. |
@@ -194,13 +196,16 @@ CONTRIBUTING.md  LICENSE  how to contribute · MIT (both leave a project made fr
 docs/
   STACK.md             GENERATED per project: framework, core layer, gate commands
   VERIFYING.md         how an entry earns `verified`, and what that has caught
-  TOOLING.md          this README, once a project has been made from agent-ready
-  TOOLING-LICENSE     agent-ready's licence, likewise
+  TOOLING.md           this README, once a project has been made from agent-ready
+  TOOLING-LICENSE      agent-ready's licence, likewise
+  anti-slop/           rules against AI slop: code · ui · copy · human
   PRD.md  ARCHITECTURE.md  FEATURES.md  TASKS.md  ROADMAP.md  VERSIONING.md
   archive/             STATUS_ARCHIVE.md · TASKS_ARCHIVE.md  (the anti-bloat contract)
 scripts/
   stacks.json          the framework registry (DATA — add frameworks here)
   stacks.schema.json   its schema, enforced by the test suite
+  comments.json        comment syntax per language (DATA — add languages here), with sources
+  comments.schema.json its schema, enforced before every comment check
   stacks.mjs           detect → package.json / .gitignore / docs/STACK.md
   gate.mjs             `npm run gate`
   version.mjs          semver source of truth + every manifest it syncs
@@ -210,6 +215,8 @@ scripts/
   check-attribution.mjs  the commit-msg rule, applied to history in CI
   setup.mjs  install-hooks.mjs  bd-prime.mjs
   read-guard.mjs       denies an unbounded Read of a long file (Claude Code hook)
+  slop-check.mjs       `npm run slop`: the comment check the gate runs first
+  slop-guard.mjs       the same check right after each edit (Claude Code hook)
   lib/                 shared utils (git, globs, managed blocks, JSON-Schema subset)
   tests/               `node --test` via run.mjs, zero dependencies
 .claude/settings.json  Claude Code hooks + no-attribution settings

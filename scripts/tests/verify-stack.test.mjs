@@ -65,10 +65,7 @@ describe("verifyStack", () => {
 
 describe("argument parsing", () => {
   it("accepts --only in both the = form and the space form", () => {
-    // The space form is the one this script's OWN usage line documents, and it
-    // was being dropped: `"--only".split("=")[1]` is undefined, so every gate
-    // ran and `lint` fell through into the positional arguments as a third
-    // argument nobody reads. It looked like it had honoured the request.
+    // The space form is the one the usage line documents; its value must not leak into the positional args.
     const equals = parseArgs(["fx", "express", "--run", "--only=lint,test"]);
     const spaced = parseArgs(["fx", "express", "--run", "--only", "lint,test"]);
     for (const parsed of [equals, spaced]) {

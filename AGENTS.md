@@ -22,6 +22,7 @@ Treat the rules below as if they were prepended to every request:
   architecture/patterns → `docs/ARCHITECTURE.md` · product strategy + sensitive-feature guardrails →
   `docs/PRD.md` · per-screen/feature behavior → `docs/FEATURES.md` · build checklist →
   `docs/TASKS.md` · release/versioning → `docs/VERSIONING.md` · future work → `docs/ROADMAP.md` ·
+  anti-slop rules → `docs/anti-slop/` (`code` · `ui` · `copy` · `human`) ·
   a domain's full build history → `docs/archive/` (read `STATUS_ARCHIVE.md` BEFORE deep work on a
   domain that has history — past forensics prevent re-fighting solved battles). Two exceptions:
   sweep wider when the task is genuinely cross-cutting, and when the answer is not in the docs read
@@ -45,8 +46,10 @@ Treat the rules below as if they were prepended to every request:
   `.beads/`). Run independent subtasks in parallel when your harness supports it.
 - **Issues:** see "Beads Issue Tracker" below — bd is canonical for cross-session issues;
   `docs/TASKS.md` stays the roadmap checklist.
-- **Avoid AI-slop design:** follow the project's design tokens and original assets; no generic
-  stock look. <!-- TODO:fill — point at the design-token file -->
+- **No AI slop.** Code, UI, copy and reports follow `docs/anti-slop/` — read the file for the area
+  you touch. A comment is a short summary of what the code cannot say: three lines at most, never
+  history. `npm run gate` runs that check first, whatever the stack. UI uses the project's design
+  tokens and original assets. <!-- TODO:fill — point at the design-token file -->
 - **One author per commit.** Do not add a `Co-Authored-By` line — not for yourself and not
   for anyone else — nor a "Generated with …" line or a session link. Credit collaborators
   in the commit body, which is prose and reaches no contributor list.
@@ -68,12 +71,14 @@ Treat the rules below as if they were prepended to every request:
 ## Quality gates — one command, any language
 
 ```bash
-npm run gate            # lint → typecheck → test → build, stopping at the first failure
+npm run gate            # slop → lint → typecheck → test → build, stopping at the first failure
 npm run gate test       # a single stage
 npm run gate:list       # what is configured, without running it
+npm run slop            # the comment check alone
 ```
 
-The actual commands live in `package.json` → `vibe.gates` and are filled in from the framework
+`slop` is built in and always runs first; its limit and ignored paths live in `package.json` →
+`vibe.slop`. The other commands live in `package.json` → `vibe.gates` and are filled in from the framework
 registry by `npm run stack:apply`. **This indirection is the point:** every agent, in every
 language, only has to know `npm run gate`. If a gate command is wrong, fix it in `package.json` —
 do not work around it, and do not invent your own build command.

@@ -1,17 +1,10 @@
-// Every CLI must refuse a flag it does not know.
-//
-// The unit tests for `parseFlags` prove the parser works; they cannot prove a
-// CLI actually calls it. That gap is the whole bug: each script tested its flags
-// with `argv.includes("--check")`, which ignores a typo and falls through to the
-// DEFAULT branch. Where the flag exists to make a command do LESS, the default
-// is the dangerous branch — `sync-agents.mjs --chek` turned "verify and write
-// nothing" into a rewrite that exited 0, so the lint gate calling it could not
-// have failed. This spawns each one for real.
-//
+// Guards that every CLI refuses an unknown flag, by spawning each one for real.
+// A typo must never fall through to the default branch, which is the dangerous one for a flag that does LESS.
 // A bogus flag is safe to run: refusal happens before any work.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -44,5 +37,11 @@ describe("CLI flag handling", () => {
     const r = spawnSync(process.execPath, [script("gate.mjs"), "--list"], { encoding: "utf8" });
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stderr, /source:/, "--list must still list");
+  });
+
+  it("names every stacks.mjs command in its usage line", () => {
+    const commands = [...readFileSync(script("stacks.mjs"), "utf8").matchAll(/case "([a-z]+)":/g)].map((m) => m[1]);
+    const usage = spawnSync(process.execPath, [script("stacks.mjs")], { encoding: "utf8" }).stderr;
+    for (const command of commands) assert.match(usage, new RegExp(`\\b${command}\\b`), `usage omits ${command}`);
   });
 });

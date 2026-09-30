@@ -1,20 +1,6 @@
 #!/usr/bin/env node
-// scripts/verify-stack.mjs — settle the question `verified` asks: are this
-// entry's markers and gate commands actually right for the real framework?
-//
-//   node scripts/verify-stack.mjs <dir> <expected-id> [--run] [--only lint,test]
-//
-// Point it at a project scaffolded by the framework's OWN creator (npm init
-// adonisjs, composer create-project, dotnet new, wails init …). It asserts that
-// detection returns the expected entry, prints the gates the registry resolves
-// for it, and with `--run` executes them in that directory — the same runner
-// `npm run gate` uses, so a pass here means a pass there.
-//
-// A fixture written by hand proves nothing: it would only echo back whatever the
-// registry already claims. The scaffold has to come from upstream.
-//
-// This is what .github/workflows/verify-stacks.yml drives, so the toolchains
-// live on GitHub's runners instead of anybody's laptop.
+// scripts/verify-stack.mjs — check a registry entry against a real project: detection, then (--run) its gates.
+// Point it at a scaffold from the framework's own creator; a hand-written fixture only echoes the registry.
 
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -58,9 +44,7 @@ export function verifyStack(dir, expected, { run = false, only = [] } = {}) {
       ranked,
       gates,
       ran: true,
-      // `failed` is null when the run was REFUSED rather than failed — an
-      // --only naming no real gate. Blaming `gate \`null\`` for that hid what
-      // had actually gone wrong, which was the request, not the project.
+      // `failed` is null when the run was refused (an --only naming no real gate): report that reason.
       reason:
         (result.failed ? `gate \`${result.failed}\` failed (exit ${result.code})` : result.reason) +
         (result.failed && result.reason ? ` — ${result.reason}` : "") +
@@ -72,13 +56,7 @@ export function verifyStack(dir, expected, { run = false, only = [] } = {}) {
 
 const USAGE = "usage: verify-stack.mjs <dir> <expected-id> [--run] [--only lint,test]";
 
-/**
- * Both `--only=lint,test` and `--only lint,test` — the space form is the one
- * this file's own usage line documents, and it used to be dropped on the floor:
- * `"--only".split("=")[1]` is undefined, so the flag became an empty selection
- * (every gate ran), and `lint` fell through into the positional arguments.
- * Silently doing something other than what was asked is worse than refusing.
- */
+/** Accepts both `--only=lint,test` and `--only lint,test`; an unknown flag is an error, never ignored. */
 export function parseArgs(argv) {
   const { positional, flags, problems } = parseFlags(argv, { known: ["--run"], valued: ["--only"] });
   return {
