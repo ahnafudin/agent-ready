@@ -1479,8 +1479,8 @@
         ]
       },
       "gates": {
-        "lint": "vendor/bin/php-cs-fixer fix --dry-run --diff",
-        "typecheck": "vendor/bin/phpstan analyse --no-progress",
+        "lint": null,
+        "typecheck": null,
         "test": "php bin/phpunit",
         "build": null
       },
@@ -1494,7 +1494,9 @@
       "coreLayer": "services in src/Service plus Doctrine repositories - controllers are thin `__invoke`s",
       "conventions": [
         "Autowiring and constructor injection; never pull from the container manually",
-        "Doctrine entities stay anaemic; logic lives in services/domain"
+        "Doctrine entities stay anaemic; logic lives in services/domain",
+        "`php bin/phpunit` exists once `composer require --dev symfony/test-pack` has run, as Symfony's testing guide says to",
+        "PHP CS Fixer and PHPStan are separate installs that symfony/skeleton and test-pack leave out — each exits 127 on a fresh project, so neither is a default gate here; add them to `tooling.gates` once installed"
       ],
       "versionTargets": [
         "composer.json"
