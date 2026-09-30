@@ -54,6 +54,14 @@ describe("pointer stubs", () => {
     assert.ok(gemini.startsWith("# Project rules"));
   });
 
+  it("makes Aider load its pointer, which it reads only when .aider.conf.yml names it", () => {
+    const aider = TARGETS.find((t) => t.tool === "Aider");
+    const conf = readIfExists(at(".aider.conf.yml"));
+    assert.ok(conf, ".aider.conf.yml must exist, or Aider starts with no rules");
+    assert.match(conf, /^read:/m);
+    assert.ok(conf.includes(aider.path), `.aider.conf.yml must read ${aider.path}`);
+  });
+
   it("is idempotent — a second render is byte-identical", () => {
     for (const target of TARGETS) assert.equal(renderStub(target), renderStub(target));
   });
