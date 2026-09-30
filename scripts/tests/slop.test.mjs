@@ -185,6 +185,15 @@ describe("the gate check and the editor hook", () => {
     assert.match(out.reason, /6-line comment/);
     assert.equal(run("not json").stdout, "");
   });
+
+  it("turns each finding into a GitHub annotation when run as the Action", (t) => {
+    const action = at("slop", "run.mjs");
+    if (!existsSync(action)) return t.skip("the Action ships with agent-ready itself");
+    const env = { ...process.env, GITHUB_WORKSPACE: project, INPUT_PATHS: "long.js short.js" };
+    const r = spawnSync(process.execPath, [action], { encoding: "utf8", env });
+    assert.equal(r.status, 1, r.stderr);
+    assert.match(r.stdout, /^::error file=long\.js,line=1::long\.js:1 — 5-line comment/m);
+  });
 });
 
 describe("the wiring", () => {

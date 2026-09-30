@@ -1,0 +1,36 @@
+{
+  "name": "agent-ready",
+  "version": "0.15.0",
+  "description": "Start a repo that AI coding agents follow, or add that tooling to one you have: one AGENTS.md, one gate, anti-slop checks.",
+  "type": "module",
+  "bin": {
+    "agent-ready": "cli.mjs"
+  },
+  "files": [
+    "cli.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "author": "ahnafudin",
+  "homepage": "https://github.com/ahnafudin/agent-ready",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahnafudin/agent-ready.git",
+    "directory": "packages/agent-ready"
+  },
+  "bugs": "https://github.com/ahnafudin/agent-ready/issues",
+  "keywords": [
+    "agents-md",
+    "ai-agents",
+    "anti-slop",
+    "claude-code",
+    "cursor",
+    "github-copilot",
+    "starter-kit",
+    "scaffolding"
+  ]
+}

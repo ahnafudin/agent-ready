@@ -135,6 +135,24 @@ npm run gate         # should already run something sensible
 
 Then open any AI coding tool and type your task — the rules ride along automatically.
 
+## Take it in parts
+
+**Only the hooks, in Claude Code** — the read guard, the slop guard and `/agent-ready:anti-slop`,
+in any project, without copying anything:
+
+```text
+/plugin marketplace add ahnafudin/agent-ready
+/plugin install agent-ready@agent-ready
+```
+
+**Only the comment check, in any repository's CI** — one annotation per long comment on the pull
+request. `paths` is optional; without it every tracked file is checked:
+
+```yaml
+- uses: actions/checkout@v7
+- uses: ahnafudin/agent-ready/slop@main   # pin a release tag for a stable check
+```
+
 ## Commands
 
 | Command | What it does |
@@ -242,8 +260,12 @@ scripts/
   attribution.yml      fails the build if any commit carries AI-agent attribution
   gate.yml             the same `npm run gate`, on Linux, Windows and macOS
   verify-stacks.yml    scaffolds real projects and verifies registry entries (agent-ready only)
-  release.yml          tags and releases every version main reaches (agent-ready only)
+  release.yml          tags and releases every version main reaches, then the npm CLI (agent-ready only)
+  slop-action.yml      runs the slop Action against this repository (agent-ready only)
 .github/ISSUE_TEMPLATE/  pull_request_template.md  assets/   (agent-ready only)
+.claude-plugin/        this repository as a Claude Code plugin and marketplace (agent-ready only)
+slop/                  the comment check as a GitHub Action (agent-ready only)
+packages/agent-ready/  the npm CLI: `init` and `add` (agent-ready only)
 ```
 
 ## Contributing

@@ -293,6 +293,8 @@ const TARGETS = [
   // `app.json` is a generic name (bare React Native uses it for the app's
   // display name); only an Expo manifest carries an "expo" key, so guard on it.
   { find: () => find("app.json"), plan: jsonVersion({ guard: '"expo"' }) },
+  // agent-ready's own distribution: its Claude Code plugin and its npm CLI release with it.
+  { find: () => find(".claude-plugin/plugin.json", "packages/agent-ready/package.json"), plan: jsonVersion() },
   { find: () => find("pyproject.toml"), plan: planPyproject },
   { find: () => find("pubspec.yaml"), plan: planPubspec },
   { find: () => find("gradle.properties"), plan: planGradleProperties },

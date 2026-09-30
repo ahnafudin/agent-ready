@@ -25,6 +25,10 @@ export const UPSTREAM_ONLY = [
   ".github/assets",
   ".github/workflows/verify-stacks.yml",
   ".github/workflows/release.yml",
+  ".github/workflows/slop-action.yml",
+  ".claude-plugin",
+  "packages",
+  "slop",
 ];
 export const FRESH_VERSION = "0.1.0";
 const KEPT_AS = join("docs", "TOOLING.md");
