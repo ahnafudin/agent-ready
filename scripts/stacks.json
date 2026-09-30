@@ -1435,7 +1435,7 @@
       },
       "gates": {
         "lint": "vendor/bin/pint --test",
-        "typecheck": "vendor/bin/phpstan analyse --no-progress",
+        "typecheck": null,
         "test": "php artisan test",
         "build": null
       },
@@ -1453,7 +1453,8 @@
         "Form Requests for validation, not `$request->validate()` sprinkled through controllers",
         "Query through Eloquent scopes or query objects; keep raw SQL out of controllers",
         "Long work goes to a queued Job, not the request cycle",
-        "Every schema change is a migration - never edit the database by hand"
+        "Every schema change is a migration - never edit the database by hand",
+        "PHPStan (Larastan for Laravel) is a separate install, not part of laravel/laravel — `vendor/bin/phpstan` exits 127 on a fresh project, so it is not a default gate here; add it to `tooling.gates` once you have installed it"
       ],
       "versionTargets": [
         "composer.json"
