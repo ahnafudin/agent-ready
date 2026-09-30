@@ -10,7 +10,7 @@
 // entry outranks it on the same evidence. `avalonia` and `maui` both key off a
 // `.csproj`; `slim` and `laravel` both off `composer.json`; every framework
 // competes with its own language base. An entry that can never win is dead
-// weight the README advertises as support the template does not actually have.
+// weight the README advertises as support agent-ready does not actually have.
 //
 // The counterpart — are these the CORRECT markers — is tracked per entry by the
 // `verified` flag and is settled by scaffolding the real thing.

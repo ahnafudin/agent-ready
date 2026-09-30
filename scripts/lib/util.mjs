@@ -185,25 +185,25 @@ export function writeIfChanged(path, next) {
   // project that has no docs/ yet — which is most of them, on the first run —
   // got an ENOENT stack trace AFTER package.json had already been rewritten:
   // half-applied, and loud in the wrong place. This only ever worked because
-  // the one directory it was aimed at, this template, already had docs/.
+  // the one directory it was aimed at, agent-ready, already had docs/.
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, next);
   return true;
 }
 
 /**
- * The name `package.json` ships with in this template.
+ * The name `package.json` ships with in agent-ready.
  *
  * While it is still this, the repo is an unpersonalised copy: `bd init` must not
  * run, because it bakes the project name into the issue prefix and COMMITS
- * .beads/ (a project_id UUID and the Dolt sync remote). Shipped from a template,
+ * .beads/ (a project_id UUID and the Dolt sync remote). Shipped from agent-ready,
  * every downstream copy would inherit that identity and push issues at somebody
  * else's remote.
  */
 export const PLACEHOLDER_NAME = "my-project";
 
 /** True while package.json still carries the placeholder name. */
-export function isUnrenamedTemplate(root = ROOT) {
+export function isAgentReadyItself(root = ROOT) {
   return readJson(join(root, "package.json"))?.name === PLACEHOLDER_NAME;
 }
 

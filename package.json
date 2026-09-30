@@ -1,7 +1,7 @@
 {
   "name": "my-project",
   "private": true,
-  "version": "0.11.0",
+  "version": "0.11.1",
   "type": "module",
   "description": "TODO:fill — one-line project description",
   "engines": {
@@ -14,7 +14,7 @@
     "hooks:install": "node scripts/install-hooks.mjs",
     "gate": "node scripts/gate.mjs",
     "gate:list": "node scripts/gate.mjs --list",
-    "test:template": "node scripts/tests/run.mjs",
+    "test:tooling": "node scripts/tests/run.mjs",
     "stack:detect": "node scripts/stacks.mjs detect",
     "stack:list": "node scripts/stacks.mjs list",
     "stack:show": "node scripts/stacks.mjs show",
@@ -33,7 +33,7 @@
   },
   "vibe": {
     "stack": "node",
-    "ownedByTemplate": true,
+    "pristine": true,
     "gates": {
       "lint": [
         "node scripts/sync-agents.mjs --check",
@@ -41,7 +41,7 @@
         "node scripts/install-hooks.mjs --check"
       ],
       "typecheck": null,
-      "test": "npm run test:template",
+      "test": "npm run test:tooling",
       "build": null
     }
   }

@@ -123,7 +123,7 @@ fell through into the positional arguments. Both forms now work, and a mistyped
 flag is refused rather than ignored.
 
 Looking for the same shape elsewhere found it in the one command that writes
-files. **`stacks.mjs apply ../my-app` configured this template instead.** The
+files. **`stacks.mjs apply ../my-app` configured agent-ready instead.** The
 `apply()` function had always taken a root; the CLI simply never passed the
 directory it was given. `detect` did accept one, which is what made the pair look
 symmetrical and the omission invisible — and every test fixture manufactured a

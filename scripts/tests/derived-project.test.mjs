@@ -1,7 +1,7 @@
 // The structural guard.
 //
-// Six bugs in this template have had one shape: scaffolding that belongs to the
-// TEMPLATE surviving into a project made from it. The beads identity. The
+// Six bugs in agent-ready have had one shape: scaffolding that belongs to the
+// agent-ready itself surviving into a project made from it. The beads identity. The
 // quality gates. The npm `test` script. The version. The README. Each was found
 // only by generating a real app (Electron, then Tauri) and running it — never by
 // the unit tests, because every one of them is invisible from inside this repo.
@@ -19,7 +19,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { at, ROOT, tryRun } from "../lib/util.mjs";
-import { TEMPLATE_README_MARKER } from "../personalize.mjs";
+import { OWN_README_MARKER } from "../personalize.mjs";
 
 // Set when we recurse into the copy, so the copy's own run of this file skips
 // (it would otherwise clone itself forever).
@@ -40,7 +40,7 @@ function node(args, cwd, env = {}) {
 
 before(() => {
   if (INSIDE) return;
-  // Exactly what a template copy contains: the tracked files. Not node_modules,
+  // Exactly what a copy contains: the tracked files. Not node_modules,
   // not .beads, not anything else lying around this working tree.
   const listed = tryRun("git", ["ls-files"]);
   if (!listed.ok) {
@@ -74,7 +74,7 @@ after(() => {
   if (dir) rmSync(dir, { recursive: true, force: true });
 });
 
-describe("a project made from this template", { skip: INSIDE && "running inside the simulation" }, () => {
+describe("a project made from agent-ready", { skip: INSIDE && "running inside the simulation" }, () => {
   const pkg = () => JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
   const read = (rel) => readFileSync(join(dir, rel), "utf8");
 
@@ -83,42 +83,42 @@ describe("a project made from this template", { skip: INSIDE && "running inside 
     assert.ok(dir, "the copy should exist");
   });
 
-  it("starts its version history at 0.1.0, not at the template's release", () => {
+  it("starts its version history at 0.1.0, not at agent-ready's release", () => {
     // Found the hard way: generated apps began life at 0.2.2 and 0.2.3.
     assert.equal(pkg().version, "0.1.0");
   });
 
-  it("gets a README about ITSELF, with the template's kept as tooling docs", () => {
+  it("gets a README about ITSELF, with agent-ready's kept as tooling docs", () => {
     const readme = read("README.md");
-    assert.doesNotMatch(readme, /agent-ready/, "the project README must not describe the template");
-    assert.ok(!readme.includes(TEMPLATE_README_MARKER));
+    assert.doesNotMatch(readme, /agent-ready/, "the project README must not describe agent-ready");
+    assert.ok(!readme.includes(OWN_README_MARKER));
     assert.match(readme, new RegExp(`^# ${PROJECT_NAME}`, "m"));
-    assert.match(read("docs/TEMPLATE.md"), /agent-ready/, "the template's own README is still available");
+    assert.match(read("docs/AGENT-READY.md"), /agent-ready/, "agent-ready's own README is still available");
   });
 
   it("leaves the licence and the contribution guide to the new owner", () => {
-    // The template's MIT licence names ITS author, so at the root it would claim
+    // Agent-ready's MIT licence names ITS author, so at the root it would claim
     // the new project. MIT requires the notice to travel with the copied
-    // tooling, so it is kept beside the template's README instead of deleted.
-    assert.ok(!existsSync(join(dir, "LICENSE")), "the template's licence would claim the new project");
-    assert.match(read("docs/TEMPLATE-LICENSE"), /^MIT License/, "the tooling's licence notice must survive");
-    assert.ok(!existsSync(join(dir, "CONTRIBUTING.md")), "a guide to contributing to the TEMPLATE is noise here");
+    // tooling, so it is kept beside agent-ready's README instead of deleted.
+    assert.ok(!existsSync(join(dir, "LICENSE")), "agent-ready's licence would claim the new project");
+    assert.match(read("docs/AGENT-READY-LICENSE"), /^MIT License/, "the tooling's licence notice must survive");
+    assert.ok(!existsSync(join(dir, "CONTRIBUTING.md")), "a guide to contributing to agent-ready is noise here");
   });
 
-  it("runs ITS gates, not the template's maintenance checks", () => {
+  it("runs ITS gates, not agent-ready's maintenance checks", () => {
     const { vibe } = pkg();
-    assert.ok(!("ownedByTemplate" in vibe), "the one-shot marker must be consumed");
+    assert.ok(!("pristine" in vibe), "the one-shot marker must be consumed");
     const flat = JSON.stringify(vibe.gates);
-    assert.doesNotMatch(flat, /sync-agents/, "that is a template-maintenance command");
+    assert.doesNotMatch(flat, /sync-agents/, "that maintains agent-ready itself");
     assert.doesNotMatch(flat, /stacks\.mjs validate/, "so is that");
   });
 
   it("leaves the conventional `test` script free for the project", () => {
-    // The template's own suite lives at `test:template`; if it held `test`,
-    // `npm run test --if-present` would run 120 template tests as the project's.
+    // Agent-ready's own suite lives at `test:tooling`; if it held `test`,
+    // `npm run test --if-present` would run 120 tooling tests as the project's.
     const { scripts } = pkg();
     assert.equal(scripts.test, undefined);
-    assert.ok(scripts["test:template"], "the tooling suite is still reachable, just renamed");
+    assert.ok(scripts["test:tooling"], "the tooling suite is still reachable, just renamed");
   });
 
   it("carries no beads identity", () => {
@@ -144,7 +144,7 @@ describe("a project made from this template", { skip: INSIDE && "running inside 
   it("inherits the whole attribution defence, not just part of it", () => {
     // The reason this is asserted rather than assumed: a bot in the contributor
     // list can only be removed by rewriting published history, so a project that
-    // inherits the template must arrive already protected — not protected once
+    // inherits agent-ready must arrive already protected — not protected once
     // somebody remembers to run a command.
     for (const f of [
       ".githooks/commit-msg", // strips it, once hooks are installed
@@ -167,7 +167,7 @@ describe("a project made from this template", { skip: INSIDE && "running inside 
 
   it("passes the whole tooling suite — the check that would have caught all six", () => {
     // Two of these tests once failed by construction in any repo that is not
-    // the template, so every generated project opened with a red gate.
+    // agent-ready, so every generated project opened with a red gate.
     // TAP, not the default reporter: `# pass N` / `# fail N` are stable to
     // assert on, where the spec reporter's output is decorated and colourised.
     // Explicit runner, not a glob: this spawn has no shell, and Node only
@@ -180,7 +180,7 @@ describe("a project made from this template", { skip: INSIDE && "running inside 
     );
     const out = `${r.stdout}\n${r.stderr}`;
     assert.equal(r.status, 0, `the tooling suite must be green in a derived project:\n${out.slice(-2500)}`);
-    assert.match(out, /# fail 0/, "no test may fail merely because the repo is not the template");
+    assert.match(out, /# fail 0/, "no test may fail merely because the repo is not agent-ready");
     assert.match(out, /# pass ([1-9]\d*)/, "the suite must actually have run");
   });
 });

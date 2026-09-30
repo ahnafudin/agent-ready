@@ -5,7 +5,7 @@
 // Why this wrapper exists: a hook's output lands directly in the agent's
 // context. Calling `bd prime` unguarded means every session on a machine that
 // has not installed beads opens with a "command not found" error — noise the
-// agent then has to reason about, on a template whose whole point is that bd is
+// agent then has to reason about, in a starter whose whole point is that bd is
 // OPTIONAL. So: forward the priming text when bd is there, exit 0 silently when
 // it is not, and speak up only for a genuine bd failure.
 //

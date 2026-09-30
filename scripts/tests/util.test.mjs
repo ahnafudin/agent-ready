@@ -12,7 +12,7 @@ import {
   dubiousOwnership,
   hasShellMetachars,
   hooksDirFor,
-  isUnrenamedTemplate,
+  isAgentReadyItself,
   NEEDS_SHELL,
   PLACEHOLDER_NAME,
   norm,
@@ -197,7 +197,7 @@ describe("hasShellMetachars / runTool", () => {
   });
 });
 
-describe("isUnrenamedTemplate", () => {
+describe("isAgentReadyItself", () => {
   const dirs = [];
   after(() => dirs.forEach((d) => rmSync(d, { recursive: true, force: true })));
   const withName = (name) => {
@@ -208,24 +208,24 @@ describe("isUnrenamedTemplate", () => {
   };
 
   it("is true while package.json still carries the placeholder", () => {
-    assert.equal(isUnrenamedTemplate(withName(PLACEHOLDER_NAME)), true);
+    assert.equal(isAgentReadyItself(withName(PLACEHOLDER_NAME)), true);
   });
 
   it("is false once the project has a real name", () => {
-    assert.equal(isUnrenamedTemplate(withName("acme-invoices")), false);
+    assert.equal(isAgentReadyItself(withName("acme-invoices")), false);
   });
 
   it("is false when there is no package.json to read", () => {
     // Never block a non-JS project that has not created the tooling manifest yet.
-    assert.equal(isUnrenamedTemplate(withName(null)), false);
+    assert.equal(isAgentReadyItself(withName(null)), false);
   });
 
-  it("guards THIS repo — the template must never ship a beads identity", (t) => {
-    // Only meaningful in the template. A project made FROM it has a real name,
+  it("guards THIS repo — agent-ready must never ship a beads identity", (t) => {
+    // Only meaningful in agent-ready. A project made FROM it has a real name,
     // and this suite travels with the project — asserting unconditionally made
     // every derived project's very first `npm run gate` red.
-    if (!isUnrenamedTemplate()) return t.skip("not the template — this project has been renamed");
-    assert.equal(isUnrenamedTemplate(), true, "package.json here must keep the placeholder name");
+    if (!isAgentReadyItself()) return t.skip("not agent-ready — this project has been renamed");
+    assert.equal(isAgentReadyItself(), true, "package.json here must keep the placeholder name");
   });
 });
 

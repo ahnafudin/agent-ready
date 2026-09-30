@@ -5,8 +5,8 @@
 //   1. git hooks first (core.hooksPath=.githooks) — so a later `bd init`
 //      CHAINS the auto-version hook instead of orphaning it
 //   2. personalise a pristine copy — reset the version to 0.1.0 and give the
-//      project its own README (the template's moves to docs/TEMPLATE.md);
-//      keyed off `vibe.ownedByTemplate`, which step 3 then clears
+//      project its own README (agent-ready's moves to docs/AGENT-READY.md);
+//      keyed off `vibe.pristine`, which step 3 then clears
 //   3. stack detection — read the framework markers, fill package.json's
 //      `vibe.gates`, the .gitignore managed block and docs/STACK.md
 //   4. agent doc pointers — regenerate the per-tool stubs from AGENTS.md
@@ -14,7 +14,7 @@
 //      (second machine / fresh clone), `bd init` only on a brand-new project,
 //      and NEVER on a dirty index (`bd init` auto-commits every staged file —
 //      a real data-loss footgun)
-//   6. Claude Code hooks — the template ships its own GUARDED priming hook, so
+//   6. Claude Code hooks — agent-ready ships its own GUARDED priming hook, so
 //      this step trusts .claude/settings.json rather than `bd setup claude
 //      --check` (which matches a literal `bd prime` and would have us reinstall
 //      bd's unguarded version on every run)
@@ -29,7 +29,7 @@ import { join } from "node:path";
 import {
   at,
   git,
-  isUnrenamedTemplate,
+  isAgentReadyItself,
   norm,
   note as write,
   PLACEHOLDER_NAME,
@@ -84,7 +84,7 @@ if (norm(toplevel.out) !== norm(ROOT)) {
 step("1/7 git hooks (auto-version)");
 relay(tryRun(process.execPath, [at("scripts", "install-hooks.mjs")]));
 
-// 2. de-template a pristine copy: version → 0.1.0, project README.
+// 2. personalise a pristine copy: version → 0.1.0, project README.
 step("2/7 personalise this copy");
 relay(tryRun(process.execPath, [at("scripts", "personalize.mjs")]));
 
@@ -107,7 +107,7 @@ if (!bdVersion.ok) {
   note("  https://github.com/gastownhall/beads  (or `brew install beads`)");
   note("Avoid CGO-less `go install` builds — embedded Dolt refuses to open with them.");
   note("Then re-run `npm run setup`.");
-} else if (isUnrenamedTemplate()) {
+} else if (isAgentReadyItself()) {
   // `bd init` bakes this project's identity into .beads/ — the issue prefix, a
   // project_id UUID and the Dolt sync remote — and then COMMITS it. Run on a
   // copy that is still called "my-project" and every downstream user of that
@@ -167,7 +167,7 @@ if (!bdVersion.ok) {
 
 // 6. Claude Code hooks
 //
-// The template ships its OWN priming hook — `node scripts/bd-prime.mjs`, which
+// Agent-ready ships its OWN priming hook — `node scripts/bd-prime.mjs`, which
 // stays silent when bd is absent instead of putting an error in every session's
 // context. `bd setup claude --check` looks for a literal `bd prime` command, so
 // it reports "✗ No hooks installed" against our wrapper no matter what. Asking
