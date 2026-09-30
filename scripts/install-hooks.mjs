@@ -26,7 +26,7 @@
 
 import { chmodSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { at, git, norm, note as write, parseFlags, ROOT, safeDirectoryHint, writeIfChanged } from "./lib/util.mjs";
+import { at, git, hooksDirFor, norm, note as write, parseFlags, ROOT, safeDirectoryHint, writeIfChanged } from "./lib/util.mjs";
 
 const HOOK_DIR = at(".githooks");
 /** Present in every hook this template owns, so a foreign one is never clobbered. */
@@ -117,7 +117,7 @@ function syncInto(dir, label) {
 if (hooksPath === ".githooks") {
   note(`already installed (core.hooksPath=.githooks; ${ours.join(", ")})`);
 } else if (hooksPath.endsWith(".beads/hooks") || hooksPath.endsWith(".beads\\hooks")) {
-  syncInto(at(".beads", "hooks"), `beads owns the chain (${hooksPath})`);
+  syncInto(hooksDirFor(hooksPath), `beads owns the chain (${hooksPath})`);
 } else if (hooksPath) {
   note(`core.hooksPath is already "${hooksPath}" (another hook manager?) — not overwriting.`);
   note("to enable this template's hooks manually: git config core.hooksPath .githooks");

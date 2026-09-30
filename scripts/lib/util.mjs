@@ -4,7 +4,7 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** Repo root (this file lives at <root>/scripts/lib/). */
@@ -113,6 +113,17 @@ export function git(args) {
 /** Repo-root path helper. */
 export function at(...parts) {
   return join(ROOT, ...parts);
+}
+
+/**
+ * The directory git reads hooks from, for a `core.hooksPath` value: the value
+ * itself when absolute, else relative to this working tree. `bd init` writes an
+ * ABSOLUTE path into the shared config, so in a linked worktree git keeps running
+ * the main checkout's hooks — reading `<worktree>/.beads/hooks` instead checks a
+ * folder that does not exist there, and fails every gate run in a worktree.
+ */
+export function hooksDirFor(hooksPath, root = ROOT) {
+  return isAbsolute(hooksPath) ? hooksPath : join(root, hooksPath);
 }
 
 /**

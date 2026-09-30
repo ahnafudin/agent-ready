@@ -11,6 +11,7 @@ import { after, describe, it } from "node:test";
 import {
   dubiousOwnership,
   hasShellMetachars,
+  hooksDirFor,
   isUnrenamedTemplate,
   NEEDS_SHELL,
   PLACEHOLDER_NAME,
@@ -87,6 +88,21 @@ describe("dubiousOwnership", () => {
 describe("norm", () => {
   it("normalises separators so path comparisons survive Windows", () => {
     assert.ok(!norm("a/b").includes("\\"));
+  });
+});
+
+describe("hooksDirFor", () => {
+  const root = join(tmpdir(), "a-worktree");
+
+  it("keeps an absolute core.hooksPath — the main checkout's hooks, even from a worktree", () => {
+    // bd writes this absolute form; reading <worktree>/.beads/hooks instead
+    // reported every hook MISSING and failed the lint gate in any worktree.
+    const main = join(tmpdir(), "main-checkout", ".beads", "hooks");
+    assert.equal(hooksDirFor(main, root), main);
+  });
+
+  it("resolves a relative one against the working tree, as git does", () => {
+    assert.equal(hooksDirFor(".beads/hooks", root), join(root, ".beads", "hooks"));
   });
 });
 
