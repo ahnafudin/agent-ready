@@ -1,4 +1,4 @@
-// Tests for scripts/version.mjs — the riskiest code in the template: it
+// Tests for scripts/version.mjs — the riskiest code in agent-ready: it
 // rewrites manifests and the post-commit hook then amends the commit around it.
 // Zero dependencies: `node --test`, which every Node ≥18 already has.
 

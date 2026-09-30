@@ -21,7 +21,7 @@ import { dirname, join, resolve as resolvePath } from "node:path";
 import { pathToFileURL } from "node:url";
 import { expandGlob, isDir, isFile } from "./lib/glob.mjs";
 import { validate } from "./lib/jsonschema.mjs";
-import { at, isUnrenamedTemplate, parseFlags, readJson, ROOT, upsertManagedBlock, writeIfChanged } from "./lib/util.mjs";
+import { at, isUnrenamed, parseFlags, readJson, ROOT, upsertManagedBlock, writeIfChanged } from "./lib/util.mjs";
 
 const REGISTRY = at("scripts", "stacks.json");
 const MAX_SCAN_BYTES = 1024 * 1024; // never slurp a huge file just to grep it
@@ -46,7 +46,7 @@ export function byId(stacks, id) {
  * Structural check against stacks.schema.json plus the invariants a schema
  * cannot express: unique ids, resolvable/acyclic `extends`, and at least one
  * detection signal (an entry that can never match is dead weight that reads as
- * support the template does not actually have).
+ * support agent-ready does not actually have).
  */
 export function validateRegistry(path = REGISTRY, schemaPath = at("scripts", "stacks.schema.json")) {
   const doc = readJson(path);
@@ -241,7 +241,7 @@ export function renderDoc({ primary, secondary }, gates) {
       "",
       GENERATED,
       "",
-      "No framework markers found in this repo yet (it is still an empty template).",
+      "No framework markers found in this repo yet (it is still a fresh copy).",
       "Once the first manifest exists (`package.json`, `composer.json`, `go.mod`, `Cargo.toml`, …),",
       "run `npm run stack:apply` and this file fills itself in.",
       "",
@@ -334,21 +334,21 @@ export function apply({ force = false, root = ROOT } = {}) {
   const raw = existsSync(pkgPath) ? readFileSync(pkgPath, "utf8") : null;
   const pkg = raw ? JSON.parse(raw) : null;
   const hadGates = Boolean(pkg?.vibe?.gates && Object.keys(pkg.vibe.gates).length > 0);
-  // The template ships gates for maintaining ITSELF (validate the registry, check
+  // Agent-ready ships gates for maintaining ITSELF (validate the registry, check
   // the generated agent files). Copied into a new project those are nonsense —
   // and because they are non-empty, "never clobber a hand-tuned block" would
   // preserve them forever: an Electron app would report a green gate having
-  // never once run its build. `ownedByTemplate` marks them as scaffolding, to be
-  // replaced the first time a RENAMED project detects its real stack. In the
-  // template itself (still named `my-project`) they are kept.
-  const templateOwned = Boolean(pkg?.vibe?.ownedByTemplate) && !isUnrenamedTemplate(root);
-  const replaceGates = !hadGates || templateOwned || force;
+  // never once run its build. `pristine` marks them as scaffolding, to be
+  // replaced the first time a RENAMED project detects its real stack. In
+  // agent-ready itself (still named `my-project`) they are kept.
+  const pristine = Boolean(pkg?.vibe?.pristine) && !isUnrenamed(root);
+  const replaceGates = !hadGates || pristine || force;
   if (pkg && found.primary && replaceGates) {
     const vibe = { ...pkg.vibe, stack: found.primary.id, gates: detected };
-    delete vibe.ownedByTemplate; // one-shot: they are this project's gates now
+    delete vibe.pristine; // one-shot: they are this project's gates now
     pkg.vibe = vibe;
     if (writeIfChanged(pkgPath, JSON.stringify(pkg, null, indentOf(raw)) + "\n")) {
-      changed.push(templateOwned ? "package.json (replaced the template's own gates)" : "package.json (vibe.gates)");
+      changed.push(pristine ? "package.json (replaced agent-ready's own gates)" : "package.json (vibe.gates)");
     }
   }
 
@@ -423,7 +423,7 @@ function main(argv) {
     }
     case "apply": {
       // `apply()` has always taken a root; this CLI just never passed one, so
-      // `stacks.mjs apply ../my-app` silently configured THE TEMPLATE instead —
+      // `stacks.mjs apply ../my-app` silently configured agent-ready itself instead —
       // the one command here that writes files, aimed at the wrong project.
       // `detect` already accepted a directory, which is exactly why the omission
       // stayed invisible: the pair looked symmetrical.

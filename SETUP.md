@@ -1,6 +1,6 @@
 # SETUP
 
-## First machine (new project from this template)
+## First machine (new project from agent-ready)
 
 ```bash
 npm install          # activates the auto-version git hook (postinstall)
@@ -23,8 +23,8 @@ If your framework is missing, add one entry to `scripts/stacks.json` (see the ex
 `README.md`) and run `npm run stack:validate`. No code change is needed — and please keep
 `"verified": false` until you have actually run the commands.
 
-> The template ships `vibe.gates` marked `"ownedByTemplate": true` — those are the commands the
-> TEMPLATE uses to maintain itself. The first `npm run stack:apply` in a renamed project replaces
+> Agent-ready ships `vibe.gates` marked `"pristine": true` — those are the commands
+> agent-ready uses to maintain itself. The first `npm run stack:apply` in a renamed project replaces
 > them with your framework's and drops the marker. After that they are yours: nothing overwrites
 > them again unless you ask (`npm run stack:reapply`).
 
@@ -38,20 +38,21 @@ Then fill the placeholders — search for `TODO:fill`:
 - [ ] `package.json` — **`name` first, before anything else.** While it is still `my-project`,
       `npm run setup` deliberately REFUSES to run `bd init`: bd bakes the name into the issue
       prefix and commits `.beads/` (a project_id and the Dolt sync remote), so initializing an
-      unrenamed copy would ship this template's identity to every project made from it.
+      unrenamed copy would ship agent-ready's identity to every project made from it.
       Non-JS project? Keep this file anyway — it is the TOOLING
       manifest (setup, gates, versioning); add your language's real manifest beside it
       (`composer.json`, `pyproject.toml`, `go.mod` + a root `VERSION` file — all auto-synced,
       see `docs/VERSIONING.md`)
-- [ ] `README.md` — `npm run setup` replaces the template's README with a stub about your project
-      (the template's own is kept at `docs/TEMPLATE.md`); fill in the description
+- [ ] `README.md` — `npm run setup` replaces agent-ready's README with a stub about your project
+      (agent-ready's own is kept at `docs/TOOLING.md`); fill in the description
 - [ ] `.env.example` — every variable the app reads (values stay empty; it is the contract)
 - [ ] `.github/workflows/gate.yml` — add your language toolchain step
 - [ ] `docs/PRD.md` — problem, goals, scope, risks, guardrails
 - [ ] `docs/ARCHITECTURE.md` — layers + first decisions
 - [ ] `docs/TASKS.md` — phase 1 checklist
-- [ ] A `LICENSE` file — this template deliberately ships none; the choice is yours
-- [ ] Delete the TEMPLATE NOTE at the top of `AGENTS.md`
+- [ ] A `LICENSE` file for your project — `npm run setup` moves agent-ready's MIT licence to
+      `docs/TOOLING-LICENSE` (it covers the copied tooling), so the root is yours to choose
+- [ ] Delete the SETUP NOTE at the top of `AGENTS.md`
 
 Prerequisites: Node ≥ 18, git, and (optional) **bd** — the official release binary from
 <https://github.com/gastownhall/beads> or `brew install beads`. Avoid CGO-less `go install` builds:
@@ -72,11 +73,11 @@ Never hand-edit `GEMINI.md`, `CONVENTIONS.md`, `.cursor/rules/`, `.windsurf/rule
 `.junie/` or `.github/copilot-instructions.md` — your changes are overwritten on the next sync.
 Commit the generated files: a fresh clone opened in Cursor must already have them.
 
-## Working on the TEMPLATE itself (not a project made from it)
+## Working on agent-ready itself (not a project made from it)
 
 Leave `package.json`'s `name` as `my-project` and setup will keep skipping `bd init` — which is
-what you want: the template must never ship a `.beads/` workspace. If you want issue tracking for
-the template repo itself, run `bd init` by hand and keep `.beads/` out of git locally
+what you want: agent-ready must never ship a `.beads/` workspace. If you want issue tracking for
+the agent-ready repo itself, run `bd init` by hand and keep `.beads/` out of git locally
 (`echo '.beads/' >> .git/info/exclude` — `.git/info/exclude` is not committed, so a real project
 still commits its own `.beads/config.yaml` for the second-machine flow).
 
@@ -119,7 +120,7 @@ What git already carries: `AGENTS.md` + the generated pointer files, docs + arch
 `.claude/settings.json` hooks, `.beads/` config + git-hooks, `.githooks/`, `package.json` gates.
 What is **per-machine**: the beads local DB, the Dolt sync remote, `core.hooksPath`, your SSH
 config, and your agent's auto-memory (it does NOT sync — anything cross-machine-critical belongs in
-`AGENTS.md`/docs, which is the whole point of this template).
+`AGENTS.md`/docs, which is the whole point of agent-ready).
 
 ```bash
 git clone <origin> && cd <project>
@@ -145,14 +146,20 @@ npm run setup && bd dolt pull
 (`npm run setup` passes `--skip-agents` to `bd init`, so a normal run cannot overwrite `AGENTS.md`.
 The cleanup above only matters if you ran `bd init` by hand.)
 
-## Machine-level agent tooling (deliberately NOT in this template)
+## Machine-level agent tooling (deliberately NOT in agent-ready)
 
 Token/behavior optimizers — e.g. **rtk** (compresses CLI output before it enters context),
 **caveman** (terse response style), **ponytail** (write-less-code bias) — are all **per-machine**
-installs (global hooks/plugins in `~/.claude`), not per-project files. They compose with this
-template but do not belong in it: a repo must work on a machine that has none of them. Install/skip
+installs (global hooks/plugins in `~/.claude`), not per-project files. They compose with
+agent-ready but do not belong in it: a repo must work on a machine that has none of them. Install/skip
 them per machine to taste. One warning if you use caveman: never run `/caveman-compress` on
 `AGENTS.md` — it rewrites lossily and the contracts there are load-bearing.
+
+One context saver does ship: `scripts/read-guard.mjs`, a Claude Code hook that denies reading a
+whole file over 400 lines without an offset/limit window (details in `CLAUDE.md`). It is the
+exception because it depends on nothing agent-ready does not already require — Node — so the rule
+above still holds: a machine with nothing installed gets it, and so does a cloud session, which
+never sees `~/.claude`. Installing the same guard globally as well is harmless: both run and agree.
 
 ## Day-to-day rhythm (any machine)
 

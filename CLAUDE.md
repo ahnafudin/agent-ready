@@ -28,11 +28,14 @@ These use Claude Code features other agents do not have. Everything else is in `
   exploration → implementation → verification → wrap-up — so the transcript's table of contents
   shows what the session is doing at a glance.
 - **Memory:** Claude Code's auto-memory does NOT sync between machines. Anything
-  cross-machine-critical belongs in `AGENTS.md` or `docs/` — which is the whole point of this
-  template.
+  cross-machine-critical belongs in `AGENTS.md` or `docs/` — which is the whole point of
+  agent-ready.
 - **Hooks:** `.claude/settings.json` runs `node scripts/bd-prime.mjs` on SessionStart and
   PreCompact. That wrapper is deliberately silent when `bd` is not installed, so a machine without
   beads does not open every session with an error sitting in context.
+- **Read guard:** a PreToolUse hook (`scripts/read-guard.mjs`) denies a Read with no
+  offset/limit of a file over 400 lines. Grep for what you need and Read that window; pass
+  `offset: 1, limit: N` when you truly need all of it. `READ_GUARD_MAX_LINES` moves the line.
 
 <!-- `bd setup claude` may append its own BEGIN/END BEADS INTEGRATION block below this line.
      Leave it alone — but note that the "Beads Issue Tracker" section of AGENTS.md OVERRIDES it

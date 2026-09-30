@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "vibe-template stack registry",
+  "title": "agent-ready stack registry",
   "description": "Framework-first registry. Every entry is DATA — adding a framework must never require a code change. Validated by scripts/tests/stacks.test.mjs, so a malformed entry turns `npm run gate` red.",
   "type": "object",
   "required": [

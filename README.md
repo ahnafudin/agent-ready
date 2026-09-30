@@ -1,7 +1,7 @@
-<!-- vibe:template-readme -->
-# vibe-template
+<!-- vibe:readme -->
+# agent-ready
 
-A project boilerplate for **AI-assisted ("vibe") coding** — structure and contracts only, no stack
+A project starter that makes a new repo **ready for AI coding agents** — structure and contracts only, no stack
 lock-in. Copy it, fill the placeholders, and every coding session starts with the right rules, the
 right docs, a working issue tracker and one command that means "is this green?" — **whichever AI
 tool and whichever framework you use.** You type only the task.
@@ -24,11 +24,12 @@ loads the same contract instead of nothing.
 | `AGENTS.md` | **Canonical rules, read by every agent.** Session working rules (docs-by-route, read-before-write, finish-100%, verify-before-claiming, no dead code, one-question rule, worktree isolation, completion report) + placeholders to fill per project. |
 | Per-tool pointers | `CLAUDE.md` (`@AGENTS.md` import + Claude-only extras) plus **generated** stubs for Copilot · Gemini CLI · Cursor · Windsurf · Cline/Roo · Junie · Aider. Each restates the non-negotiables inline, so an agent that ignores file references is still bound by them. **Coexists with other tools that write to the same files:** a region fenced off between `<!-- name:start -->` / `<!-- name:end -->` or `<!-- BEGIN name -->` / `<!-- END name -->` markers (bd writes one, and every rules installer has its own) is carried across instead of overwritten — this repo owns the generated part of those files, not the whole file. |
 | **Framework registry** | `scripts/stacks.json` — detection markers, gate commands, `.gitignore` lines, core-layer rule and conventions per framework. Adding one is **a JSON row, no code change**. Schema-validated by the test suite. |
-| **`npm run gate`** | One command in every language: lint → typecheck → test → build, stopping at the first failure. Polyglot repos (Tauri, a Next.js + FastAPI monorepo) run both sides. The first `stack:apply` in a renamed project swaps the template's own gates for your framework's; after that they are yours. |
+| **`npm run gate`** | One command in every language: lint → typecheck → test → build, stopping at the first failure. Polyglot repos (Tauri, a Next.js + FastAPI monorepo) run both sides. The first `stack:apply` in a renamed project swaps agent-ready's own gates for your framework's; after that they are yours. |
 | `docs/STACK.md` | **Generated** per project: which framework was detected, where heavy logic belongs, the exact gate commands, framework conventions. The brief a fresh agent reads instead of guessing. |
 | `docs/` skeletons | `PRD` · `ARCHITECTURE` · `FEATURES` · `TASKS` · `ROADMAP` · `VERSIONING` — thin frames, not content. |
 | **Archive contract** | `docs/archive/STATUS_ARCHIVE.md` + `TASKS_ARCHIVE.md`: when work merges, its full story moves here and `AGENTS.md` keeps ≤ 1 bullet per domain — the always-loaded context never bloats. |
-| **Beads issue tracker** | Optional `bd` wiring with rules reconciled for this workflow: bd = cross-session issues, `docs/TASKS.md` = roadmap checklist, no auto-push. Silent when bd is not installed, and refuses to initialise until you rename the project — bd commits an identity, which must not ship from a template. |
+| **Read guard** | `scripts/read-guard.mjs`, a Claude Code hook that denies reading a whole file over 400 lines without an offset/limit window, and says how to read the part you need instead. Whole files read to find one function are the largest single entries in a long session's context, and nothing takes them back out. |
+| **Beads issue tracker** | Optional `bd` wiring with rules reconciled for this workflow: bd = cross-session issues, `docs/TASKS.md` = roadmap checklist, no auto-push. Silent when bd is not installed, and refuses to initialise until you rename the project — bd commits an identity, which must not ship from agent-ready. |
 | **Auto-versioning** | A conventional-commit hook bumps semver in `package.json` and syncs **every other manifest that exists** — inside the same commit. |
 | **No agent attribution** | Three layers, because one bad commit is permanent — it puts a bot in your GitHub contributor list, removable only by rewriting published history. `.claude/settings.json` stops Claude Code adding `Co-Authored-By`, a "Generated with" line or a session link, and arms the hooks at session start; `.githooks/commit-msg` strips them whatever tool wrote them — Cursor, Copilot, or one that does not exist yet; and `.github/workflows/attribution.yml` fails the build if any commit carries them anyway, which is the layer that covers a fresh clone where no hook is installed yet. The rule is **one author per commit**: every `Co-Authored-By` line goes, not only an agent's, because separating the two was tried by name (which deleted a real person whose address contained "amp") and by bot address (a list that must grow with every new agent, where one miss is permanent). Credit collaborators in the commit body. |
 | `scripts/setup.mjs` | One-shot, idempotent, ordered bootstrap (order matters — see below). |
@@ -104,9 +105,10 @@ Deliberately **not** touched, because they are release counters rather than semv
 ## Quick start
 
 ```bash
-# 1. copy the template (GitHub: "Use this template", or)
-gh repo create my-project --template <owner>/vibe-template --private --clone
+# 1. copy it into a new project with a history of its own (nothing links back here)
+git clone --depth 1 https://github.com/ahnafudin/agent-ready.git my-project
 cd my-project
+rm -rf .git && git init
 
 # 2. bootstrap (safe to re-run any time)
 npm install          # activates the version hook via postinstall
@@ -149,28 +151,30 @@ Claude hooks → dolt remote**, because:
 
 - `bd init` moves `core.hooksPath` to `.beads/hooks` and **chains whatever hook is already
   installed** — install the version hook first or it gets orphaned.
-- Personalising comes before stack detection: it keys off `vibe.ownedByTemplate`, which the
+- Personalising comes before stack detection: it keys off `vibe.pristine`, which the
   detection step then clears.
 - `bd init` **auto-commits everything staged** — the script refuses to run it on a dirty index, and
   every step before it writes only *unstaged* changes, so nothing can be swept in.
 - bd is optional: when it is missing, steps 5–7 are skipped and the rest still completes.
 - The Dolt sync remote lives in the local DB, not in git — it must be added per machine.
 
-## What happens to a copy of this template
+## What happens to a copy of agent-ready
 
-The first `npm run setup` in a **renamed** project de-templates it, once:
+The first `npm run setup` in a **renamed** project personalises it, once:
 
 | Scaffolding | Becomes |
 |---|---|
-| version `0.2.x` (this template's release history) | `0.1.0` |
-| this README | a README about your project; this one is kept as `docs/TEMPLATE.md` |
-| `vibe.gates` (commands that maintain the template) | your framework's gates, from the registry |
-| the `test` npm script (the tooling's own suite) | free for your project; the suite stays at `test:template` |
+| version `0.2.x` (agent-ready's release history) | `0.1.0` |
+| this README | a README about your project; this one is kept as `docs/TOOLING.md` |
+| `vibe.gates` (commands that maintain agent-ready) | your framework's gates, from the registry |
+| the `test` npm script (the tooling's own suite) | free for your project; the suite stays at `test:tooling` |
 | no beads workspace | initialised with YOUR issue prefix and remote |
+| agent-ready's MIT `LICENSE` | kept as `docs/TOOLING-LICENSE` beside the tooling it covers; the root is yours to license |
+| `CONTRIBUTING.md` (how to contribute to agent-ready) | removed |
 
-All of it is keyed off `vibe.ownedByTemplate` and happens exactly once. Nothing you have written is
+All of it is keyed off `vibe.pristine` and happens exactly once. Nothing you have written is
 ever replaced. `scripts/tests/derived-project.test.mjs` builds a copy, renames it, bootstraps it and
-runs this whole suite inside it — every one of those rows is a bug this template shipped until a
+runs this whole suite inside it — every one of those rows is a bug agent-ready shipped until a
 real generated app exposed it.
 
 ## Two machines?
@@ -186,10 +190,12 @@ CLAUDE.md              @AGENTS.md import + Claude-Code-only extras
 GEMINI.md  CONVENTIONS.md  .cursor/  .windsurf/  .clinerules/  .junie/  .github/copilot-instructions.md
                        generated pointers — do not hand-edit
 SETUP.md               fill-in checklist · second-machine checklist
+CONTRIBUTING.md  LICENSE  how to contribute · MIT (both leave a project made from agent-ready)
 docs/
   STACK.md             GENERATED per project: framework, core layer, gate commands
   VERIFYING.md         how an entry earns `verified`, and what that has caught
-  TEMPLATE.md          this README, once a project has been made from the template
+  TOOLING.md          this README, once a project has been made from agent-ready
+  TOOLING-LICENSE     agent-ready's licence, likewise
   PRD.md  ARCHITECTURE.md  FEATURES.md  TASKS.md  ROADMAP.md  VERSIONING.md
   archive/             STATUS_ARCHIVE.md · TASKS_ARCHIVE.md  (the anti-bloat contract)
 scripts/
@@ -199,10 +205,11 @@ scripts/
   gate.mjs             `npm run gate`
   version.mjs          semver source of truth + every manifest it syncs
   sync-agents.mjs      AGENTS.md → per-tool pointer files
-  personalize.mjs      de-template a fresh copy (version → 0.1.0, project README)
+  personalize.mjs      personalise a fresh copy (version → 0.1.0, project README, licence)
   verify-stack.mjs     detect + run the gates of a scaffolded project
   check-attribution.mjs  the commit-msg rule, applied to history in CI
   setup.mjs  install-hooks.mjs  bd-prime.mjs
+  read-guard.mjs       denies an unbounded Read of a long file (Claude Code hook)
   lib/                 shared utils (git, globs, managed blocks, JSON-Schema subset)
   tests/               `node --test` via run.mjs, zero dependencies
 .claude/settings.json  Claude Code hooks + no-attribution settings
@@ -215,19 +222,13 @@ scripts/
   verify-stacks.yml    scaffolds real projects and verifies registry entries
 ```
 
-## Contributing to the template itself
+## Contributing
 
-`npm run gate` is the whole contract: it validates the registry against its schema, checks the
-generated pointer files are in sync, and runs the full suite (`node --test`, zero dependencies)
-covering every version-manifest planner, every detection rule, the commit-msg hook, the
-documented commands themselves, and a simulated project built from this template.
+Fork, branch, `npm run gate`, pull request. The full guide — and the invariants the test suite
+protects — is [CONTRIBUTING.md](https://github.com/ahnafudin/agent-ready/blob/main/CONTRIBUTING.md).
 
-The invariants those tests protect, which are easy to break by accident:
+## License
 
-- a bump must never touch a Cargo **dependency** version, a Maven `<parent>` or dependency version,
-  an Android `versionCode`, or a Flutter build number;
-- `writeAll` must validate **every** manifest before writing **any** of them;
-- `react-vite` must not claim every React-based framework (that is what `detect.all` is for);
-- a polyglot repo must report **both** stacks, not just the loudest one;
-- every pointer file must restate the non-negotiables inline, not merely link to `AGENTS.md`;
-- no doc may print an `npm run <script> --flag` form that npm will swallow.
+[MIT](https://github.com/ahnafudin/agent-ready/blob/main/LICENSE) © 2026 ahnafudin. A project
+made from agent-ready keeps that notice in `docs/TOOLING-LICENSE`, beside the tooling it
+covers, and chooses its own licence.

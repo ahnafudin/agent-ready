@@ -4,7 +4,7 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** Repo root (this file lives at <root>/scripts/lib/). */
@@ -116,6 +116,17 @@ export function at(...parts) {
 }
 
 /**
+ * The directory git reads hooks from, for a `core.hooksPath` value: the value
+ * itself when absolute, else relative to this working tree. `bd init` writes an
+ * ABSOLUTE path into the shared config, so in a linked worktree git keeps running
+ * the main checkout's hooks — reading `<worktree>/.beads/hooks` instead checks a
+ * folder that does not exist there, and fails every gate run in a worktree.
+ */
+export function hooksDirFor(hooksPath, root = ROOT) {
+  return isAbsolute(hooksPath) ? hooksPath : join(root, hooksPath);
+}
+
+/**
  * Split argv into positional arguments and flags, REFUSING any flag not listed.
  *
  * Every CLI here tested flags with `argv.includes("--check")`, which silently
@@ -174,25 +185,25 @@ export function writeIfChanged(path, next) {
   // project that has no docs/ yet — which is most of them, on the first run —
   // got an ENOENT stack trace AFTER package.json had already been rewritten:
   // half-applied, and loud in the wrong place. This only ever worked because
-  // the one directory it was aimed at, this template, already had docs/.
+  // the one directory it was aimed at, agent-ready, already had docs/.
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, next);
   return true;
 }
 
 /**
- * The name `package.json` ships with in this template.
+ * The name `package.json` ships with in agent-ready.
  *
  * While it is still this, the repo is an unpersonalised copy: `bd init` must not
  * run, because it bakes the project name into the issue prefix and COMMITS
- * .beads/ (a project_id UUID and the Dolt sync remote). Shipped from a template,
+ * .beads/ (a project_id UUID and the Dolt sync remote). Shipped from agent-ready,
  * every downstream copy would inherit that identity and push issues at somebody
  * else's remote.
  */
 export const PLACEHOLDER_NAME = "my-project";
 
 /** True while package.json still carries the placeholder name. */
-export function isUnrenamedTemplate(root = ROOT) {
+export function isUnrenamed(root = ROOT) {
   return readJson(join(root, "package.json"))?.name === PLACEHOLDER_NAME;
 }
 

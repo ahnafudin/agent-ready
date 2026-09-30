@@ -76,7 +76,7 @@ coverage/
 *.tsbuildinfo
 # <<< vibe:stack-ignores
 
-# `bd init` appends a bare `*.db` here. Narrowed on purpose: this template
+# `bd init` appends a bare `*.db` here. Narrowed on purpose: agent-ready
 # scopes the rule to .beads/ (above) so a project's own SQLite file — a seeded
 # fixture, a dev database you actually track — is never ignored silently.
 # Widen it yourself if your project genuinely wants every *.db ignored.

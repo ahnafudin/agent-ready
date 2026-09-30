@@ -40,7 +40,7 @@ describe("registry integrity", () => {
     assert.deepEqual(validateRegistry(), []);
   });
 
-  it("covers the framework families the template advertises", () => {
+  it("covers the framework families agent-ready advertises", () => {
     const ids = new Set(stacks.map((s) => s.id));
     const promised = [
       "electron", "tauri", "wails",
@@ -327,13 +327,13 @@ describe("generated docs/STACK.md", () => {
   });
 });
 
-describe("apply(): the template's own gates must not survive into a project", () => {
-  // Found by actually generating an Electron app from this template: the new
-  // project inherited the template's maintenance gates (validate the registry,
+describe("apply(): agent-ready's own gates must not survive into a project", () => {
+  // Found by actually generating an Electron app from agent-ready: the new
+  // project inherited agent-ready's maintenance gates (validate the registry,
   // check the generated agent files) and — because they were non-empty — the
   // "never clobber hand-tuned gates" rule preserved them forever. `npm run gate`
   // reported green having never once run the Electron build.
-  const TEMPLATE_GATES = {
+  const OWN_GATES = {
     lint: ["node scripts/sync-agents.mjs --check", "node scripts/stacks.mjs validate"],
     typecheck: null,
     test: "npm run test --if-present",
@@ -349,22 +349,22 @@ describe("apply(): the template's own gates must not survive into a project", ()
   };
 
   it("replaces them once the project has been renamed", () => {
-    const dir = project("my-electron-app", { stack: "node", ownedByTemplate: true, gates: TEMPLATE_GATES });
+    const dir = project("my-electron-app", { stack: "node", pristine: true, gates: OWN_GATES });
     const result = apply({ root: dir });
     assert.equal(result.primary.id, "electron");
     const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).vibe;
     assert.equal(after.stack, "electron");
     assert.equal(after.gates.build, "npm run build", "the Electron build gate must be wired in");
-    assert.ok(!("ownedByTemplate" in after), "the marker is one-shot and must be dropped");
-    assert.notDeepEqual(after.gates.lint, TEMPLATE_GATES.lint);
+    assert.ok(!("pristine" in after), "the marker is one-shot and must be dropped");
+    assert.notDeepEqual(after.gates.lint, OWN_GATES.lint);
   });
 
-  it("keeps them in the template itself, which is still unrenamed", () => {
-    const dir = project("my-project", { stack: "node", ownedByTemplate: true, gates: TEMPLATE_GATES });
+  it("keeps them in agent-ready itself, which is still unrenamed", () => {
+    const dir = project("my-project", { stack: "node", pristine: true, gates: OWN_GATES });
     apply({ root: dir });
     const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).vibe;
-    assert.deepEqual(after.gates, TEMPLATE_GATES, "the template maintains itself with these");
-    assert.equal(after.ownedByTemplate, true);
+    assert.deepEqual(after.gates, OWN_GATES, "agent-ready maintains itself with these");
+    assert.equal(after.pristine, true);
   });
 
   it("never overwrites gates a developer actually wrote", () => {
@@ -372,7 +372,7 @@ describe("apply(): the template's own gates must not survive into a project", ()
     const dir = project("my-electron-app", { stack: "electron", gates: mine });
     apply({ root: dir });
     const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).vibe;
-    assert.deepEqual(after.gates, mine, "no ownedByTemplate marker => hand-tuned => untouched");
+    assert.deepEqual(after.gates, mine, "no pristine marker => hand-tuned => untouched");
   });
 
   it("documents the gates that will actually run, not the registry's opinion", () => {
@@ -387,7 +387,7 @@ describe("apply(): the template's own gates must not survive into a project", ()
 
 describe("apply() aimed at another project", () => {
   const CLI = fileURLToPath(new URL("../stacks.mjs", import.meta.url));
-  const TEMPLATE_DOC = fileURLToPath(new URL("../../docs/STACK.md", import.meta.url));
+  const OWN_STACK_DOC = fileURLToPath(new URL("../../docs/STACK.md", import.meta.url));
 
   it("creates docs/ in a project that has none", () => {
     // Every fixture above manufactures `docs/.keep`, which is exactly why this
@@ -401,20 +401,20 @@ describe("apply() aimed at another project", () => {
     assert.ok(existsSync(join(dir, "docs", "STACK.md")), "apply must create the directory it writes into");
   });
 
-  it("writes to the directory named on the command line, not to the template", () => {
+  it("writes to the directory named on the command line, not to agent-ready", () => {
     // The bug this pins: the CLI called `apply({ force })` and never passed the
     // directory, so `stacks.mjs apply ../my-app` configured THIS REPO instead.
     // `detect` already took a directory, which is what made the pair look
     // symmetrical and the omission invisible. It is the one command that writes.
     const dir = repo({ "package.json": pkg({ name: "elsewhere", dependencies: { express: "4.19.0" } }) });
-    const before = readFileSync(TEMPLATE_DOC, "utf8");
+    const before = readFileSync(OWN_STACK_DOC, "utf8");
 
     const r = spawnSync(process.execPath, [CLI, "apply", dir], { encoding: "utf8" });
     assert.equal(r.status, 0, r.stderr);
 
     const target = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
     assert.equal(target.vibe.stack, "express", "the named project must be the one configured");
-    assert.equal(readFileSync(TEMPLATE_DOC, "utf8"), before, "the template must not have been touched");
+    assert.equal(readFileSync(OWN_STACK_DOC, "utf8"), before, "agent-ready must not have been touched");
   });
 
   it("refuses a mistyped flag rather than running as if it were absent", () => {
