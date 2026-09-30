@@ -15,13 +15,13 @@ jobs:
     name: no AI attribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The whole history: a bad commit anywhere is a contributor entry,
           # not just a bad commit in this push.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
 
