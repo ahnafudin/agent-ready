@@ -1,6 +1,6 @@
 // The structural guard.
 //
-// Six bugs in agent-ready have had one shape: scaffolding that belongs to the
+// Six bugs in agent-ready have had one shape: scaffolding that belongs to
 // agent-ready itself surviving into a project made from it. The beads identity. The
 // quality gates. The npm `test` script. The version. The README. Each was found
 // only by generating a real app (Electron, then Tauri) and running it — never by
@@ -93,7 +93,7 @@ describe("a project made from agent-ready", { skip: INSIDE && "running inside th
     assert.doesNotMatch(readme, /agent-ready/, "the project README must not describe agent-ready");
     assert.ok(!readme.includes(OWN_README_MARKER));
     assert.match(readme, new RegExp(`^# ${PROJECT_NAME}`, "m"));
-    assert.match(read("docs/AGENT-READY.md"), /agent-ready/, "agent-ready's own README is still available");
+    assert.match(read("docs/TOOLING.md"), /agent-ready/, "agent-ready's own README is still available");
   });
 
   it("leaves the licence and the contribution guide to the new owner", () => {
@@ -101,7 +101,7 @@ describe("a project made from agent-ready", { skip: INSIDE && "running inside th
     // the new project. MIT requires the notice to travel with the copied
     // tooling, so it is kept beside agent-ready's README instead of deleted.
     assert.ok(!existsSync(join(dir, "LICENSE")), "agent-ready's licence would claim the new project");
-    assert.match(read("docs/AGENT-READY-LICENSE"), /^MIT License/, "the tooling's licence notice must survive");
+    assert.match(read("docs/TOOLING-LICENSE"), /^MIT License/, "the tooling's licence notice must survive");
     assert.ok(!existsSync(join(dir, "CONTRIBUTING.md")), "a guide to contributing to agent-ready is noise here");
   });
 

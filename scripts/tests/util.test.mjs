@@ -12,7 +12,7 @@ import {
   dubiousOwnership,
   hasShellMetachars,
   hooksDirFor,
-  isAgentReadyItself,
+  isUnrenamed,
   NEEDS_SHELL,
   PLACEHOLDER_NAME,
   norm,
@@ -197,7 +197,7 @@ describe("hasShellMetachars / runTool", () => {
   });
 });
 
-describe("isAgentReadyItself", () => {
+describe("isUnrenamed", () => {
   const dirs = [];
   after(() => dirs.forEach((d) => rmSync(d, { recursive: true, force: true })));
   const withName = (name) => {
@@ -208,24 +208,24 @@ describe("isAgentReadyItself", () => {
   };
 
   it("is true while package.json still carries the placeholder", () => {
-    assert.equal(isAgentReadyItself(withName(PLACEHOLDER_NAME)), true);
+    assert.equal(isUnrenamed(withName(PLACEHOLDER_NAME)), true);
   });
 
   it("is false once the project has a real name", () => {
-    assert.equal(isAgentReadyItself(withName("acme-invoices")), false);
+    assert.equal(isUnrenamed(withName("acme-invoices")), false);
   });
 
   it("is false when there is no package.json to read", () => {
     // Never block a non-JS project that has not created the tooling manifest yet.
-    assert.equal(isAgentReadyItself(withName(null)), false);
+    assert.equal(isUnrenamed(withName(null)), false);
   });
 
   it("guards THIS repo — agent-ready must never ship a beads identity", (t) => {
     // Only meaningful in agent-ready. A project made FROM it has a real name,
     // and this suite travels with the project — asserting unconditionally made
     // every derived project's very first `npm run gate` red.
-    if (!isAgentReadyItself()) return t.skip("not agent-ready — this project has been renamed");
-    assert.equal(isAgentReadyItself(), true, "package.json here must keep the placeholder name");
+    if (!isUnrenamed()) return t.skip("not agent-ready — this project has been renamed");
+    assert.equal(isUnrenamed(), true, "package.json here must keep the placeholder name");
   });
 });
 

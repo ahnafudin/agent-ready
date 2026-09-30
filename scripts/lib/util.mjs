@@ -203,7 +203,7 @@ export function writeIfChanged(path, next) {
 export const PLACEHOLDER_NAME = "my-project";
 
 /** True while package.json still carries the placeholder name. */
-export function isAgentReadyItself(root = ROOT) {
+export function isUnrenamed(root = ROOT) {
   return readJson(join(root, "package.json"))?.name === PLACEHOLDER_NAME;
 }
 

@@ -12,12 +12,12 @@
 //   README    agent-ready's README describes agent-ready itself. Left in place, an
 //             agent opening the project reads "a project boilerplate … 70-entry
 //             framework registry" and concludes the project IS agent-ready.
-//             It moves to docs/AGENT-READY.md — still needed, since it documents
+//             It moves to docs/TOOLING.md — still needed, since it documents
 //             the tooling — and a project README takes its place.
 //   LICENSE   agent-ready's MIT licence names agent-ready's author; left at
 //             the root it would claim the new project. MIT requires the notice
 //             to travel with the copied tooling, so it moves to
-//             docs/AGENT-READY-LICENSE, and the root is left for the owner's choice.
+//             docs/TOOLING-LICENSE, and the root is left for the owner's choice.
 //   CONTRIBUTING.md  explains how to contribute to agent-ready — noise in a
 //             project, and GitHub would show it on every new issue. Removed.
 //
@@ -30,12 +30,12 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { isAgentReadyItself, note as write, parseFlags, readJson, ROOT, writeIfChanged } from "./lib/util.mjs";
+import { isUnrenamed, note as write, parseFlags, readJson, ROOT, writeIfChanged } from "./lib/util.mjs";
 
 /** Marks a README as still being agent-ready's own, and therefore replaceable. */
-export const OWN_README_MARKER = "<!-- agent-ready:readme -->";
+export const OWN_README_MARKER = "<!-- vibe:readme -->";
 /** Marks a CONTRIBUTING.md as agent-ready's own, and therefore removable. */
-export const OWN_CONTRIBUTING_MARKER = "<!-- agent-ready:contributing -->";
+export const OWN_CONTRIBUTING_MARKER = "<!-- vibe:contributing -->";
 /**
  * Agent-ready's LICENSE, recognised by its holder line — a licence the owner
  * wrote names someone else and is never moved. (The marker trick is not used
@@ -43,8 +43,8 @@ export const OWN_CONTRIBUTING_MARKER = "<!-- agent-ready:contributing -->";
  */
 const OWN_LICENSE = /^Copyright \(c\) [\d, -]+ ahnafudin$/m;
 export const FRESH_VERSION = "0.1.0";
-const KEPT_AS = join("docs", "AGENT-READY.md");
-const LICENSE_KEPT_AS = join("docs", "AGENT-READY-LICENSE");
+const KEPT_AS = join("docs", "TOOLING.md");
+const LICENSE_KEPT_AS = join("docs", "TOOLING-LICENSE");
 
 const note = (msg) => write(msg, "[personalize] ");
 
@@ -73,8 +73,8 @@ function projectReadme(pkg) {
     "| Product scope and guardrails | [`docs/PRD.md`](docs/PRD.md) |",
     "| Architecture and key decisions | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |",
     "| What is being built next | [`docs/TASKS.md`](docs/TASKS.md) |",
-    "| How the tooling in `scripts/` works | [`docs/AGENT-READY.md`](docs/AGENT-READY.md) |",
-    "| The licence that tooling came with — keep it beside `scripts/` | [`docs/AGENT-READY-LICENSE`](docs/AGENT-READY-LICENSE) |",
+    "| How the tooling in `scripts/` works | [`docs/TOOLING.md`](docs/TOOLING.md) |",
+    "| The licence that tooling came with — keep it beside `scripts/` | [`docs/TOOLING-LICENSE`](docs/TOOLING-LICENSE) |",
     "",
   ].join("\n");
 }
@@ -86,7 +86,7 @@ function projectReadme(pkg) {
  */
 export function personalize({ root = ROOT } = {}) {
   const changed = [];
-  if (isAgentReadyItself(root)) {
+  if (isUnrenamed(root)) {
     return { skipped: "this IS agent-ready (package.json still has the placeholder name)", changed };
   }
   const pkgPath = join(root, "package.json");

@@ -23,7 +23,7 @@ If your framework is missing, add one entry to `scripts/stacks.json` (see the ex
 `README.md`) and run `npm run stack:validate`. No code change is needed — and please keep
 `"verified": false` until you have actually run the commands.
 
-> Agent-ready ships `vibe.gates` marked `"pristine": true` — those are the commands the
+> Agent-ready ships `vibe.gates` marked `"pristine": true` — those are the commands
 > agent-ready uses to maintain itself. The first `npm run stack:apply` in a renamed project replaces
 > them with your framework's and drops the marker. After that they are yours: nothing overwrites
 > them again unless you ask (`npm run stack:reapply`).
@@ -44,14 +44,14 @@ Then fill the placeholders — search for `TODO:fill`:
       (`composer.json`, `pyproject.toml`, `go.mod` + a root `VERSION` file — all auto-synced,
       see `docs/VERSIONING.md`)
 - [ ] `README.md` — `npm run setup` replaces agent-ready's README with a stub about your project
-      (agent-ready's own is kept at `docs/AGENT-READY.md`); fill in the description
+      (agent-ready's own is kept at `docs/TOOLING.md`); fill in the description
 - [ ] `.env.example` — every variable the app reads (values stay empty; it is the contract)
 - [ ] `.github/workflows/gate.yml` — add your language toolchain step
 - [ ] `docs/PRD.md` — problem, goals, scope, risks, guardrails
 - [ ] `docs/ARCHITECTURE.md` — layers + first decisions
 - [ ] `docs/TASKS.md` — phase 1 checklist
 - [ ] A `LICENSE` file for your project — `npm run setup` moves agent-ready's MIT licence to
-      `docs/AGENT-READY-LICENSE` (it covers the copied tooling), so the root is yours to choose
+      `docs/TOOLING-LICENSE` (it covers the copied tooling), so the root is yours to choose
 - [ ] Delete the SETUP NOTE at the top of `AGENTS.md`
 
 Prerequisites: Node ≥ 18, git, and (optional) **bd** — the official release binary from

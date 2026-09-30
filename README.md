@@ -1,4 +1,4 @@
-<!-- agent-ready:readme -->
+<!-- vibe:readme -->
 # agent-ready
 
 A project starter that makes a new repo **ready for AI coding agents** — structure and contracts only, no stack
@@ -165,11 +165,11 @@ The first `npm run setup` in a **renamed** project personalises it, once:
 | Scaffolding | Becomes |
 |---|---|
 | version `0.2.x` (agent-ready's release history) | `0.1.0` |
-| this README | a README about your project; this one is kept as `docs/AGENT-READY.md` |
+| this README | a README about your project; this one is kept as `docs/TOOLING.md` |
 | `vibe.gates` (commands that maintain agent-ready) | your framework's gates, from the registry |
 | the `test` npm script (the tooling's own suite) | free for your project; the suite stays at `test:tooling` |
 | no beads workspace | initialised with YOUR issue prefix and remote |
-| agent-ready's MIT `LICENSE` | kept as `docs/AGENT-READY-LICENSE` beside the tooling it covers; the root is yours to license |
+| agent-ready's MIT `LICENSE` | kept as `docs/TOOLING-LICENSE` beside the tooling it covers; the root is yours to license |
 | `CONTRIBUTING.md` (how to contribute to agent-ready) | removed |
 
 All of it is keyed off `vibe.pristine` and happens exactly once. Nothing you have written is
@@ -194,8 +194,8 @@ CONTRIBUTING.md  LICENSE  how to contribute · MIT (both leave a project made fr
 docs/
   STACK.md             GENERATED per project: framework, core layer, gate commands
   VERIFYING.md         how an entry earns `verified`, and what that has caught
-  AGENT-READY.md          this README, once a project has been made from agent-ready
-  AGENT-READY-LICENSE     agent-ready's licence, likewise
+  TOOLING.md          this README, once a project has been made from agent-ready
+  TOOLING-LICENSE     agent-ready's licence, likewise
   PRD.md  ARCHITECTURE.md  FEATURES.md  TASKS.md  ROADMAP.md  VERSIONING.md
   archive/             STATUS_ARCHIVE.md · TASKS_ARCHIVE.md  (the anti-bloat contract)
 scripts/
@@ -230,5 +230,5 @@ protects — is [CONTRIBUTING.md](https://github.com/ahnafudin/agent-ready/blob/
 ## License
 
 [MIT](https://github.com/ahnafudin/agent-ready/blob/main/LICENSE) © 2026 ahnafudin. A project
-made from agent-ready keeps that notice in `docs/AGENT-READY-LICENSE`, beside the tooling it
+made from agent-ready keeps that notice in `docs/TOOLING-LICENSE`, beside the tooling it
 covers, and chooses its own licence.

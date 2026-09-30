@@ -21,7 +21,7 @@ import { dirname, join, resolve as resolvePath } from "node:path";
 import { pathToFileURL } from "node:url";
 import { expandGlob, isDir, isFile } from "./lib/glob.mjs";
 import { validate } from "./lib/jsonschema.mjs";
-import { at, isAgentReadyItself, parseFlags, readJson, ROOT, upsertManagedBlock, writeIfChanged } from "./lib/util.mjs";
+import { at, isUnrenamed, parseFlags, readJson, ROOT, upsertManagedBlock, writeIfChanged } from "./lib/util.mjs";
 
 const REGISTRY = at("scripts", "stacks.json");
 const MAX_SCAN_BYTES = 1024 * 1024; // never slurp a huge file just to grep it
@@ -339,9 +339,9 @@ export function apply({ force = false, root = ROOT } = {}) {
   // and because they are non-empty, "never clobber a hand-tuned block" would
   // preserve them forever: an Electron app would report a green gate having
   // never once run its build. `pristine` marks them as scaffolding, to be
-  // replaced the first time a RENAMED project detects its real stack. In the
+  // replaced the first time a RENAMED project detects its real stack. In
   // agent-ready itself (still named `my-project`) they are kept.
-  const pristine = Boolean(pkg?.vibe?.pristine) && !isAgentReadyItself(root);
+  const pristine = Boolean(pkg?.vibe?.pristine) && !isUnrenamed(root);
   const replaceGates = !hadGates || pristine || force;
   if (pkg && found.primary && replaceGates) {
     const vibe = { ...pkg.vibe, stack: found.primary.id, gates: detected };

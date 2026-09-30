@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it } from "node:test";
-import { at, isAgentReadyItself, readIfExists, readJson } from "../lib/util.mjs";
+import { at, isUnrenamed, readIfExists, readJson } from "../lib/util.mjs";
 import { detectResolved, loadRegistry, renderDoc } from "../stacks.mjs";
 import { renderStub, TARGETS } from "../sync-agents.mjs";
 
@@ -122,7 +122,7 @@ describe("the README's honesty claim", () => {
   it("matches what stacks.json actually says", (t) => {
     // Only meaningful here: `personalize.mjs` replaces this README with the
     // project's own, so a derived copy has no such claim to check.
-    if (!isAgentReadyItself()) return t.skip("not agent-ready — its README was replaced");
+    if (!isUnrenamed()) return t.skip("not agent-ready — its README was replaced");
     const stacks = loadRegistry();
     const verified = stacks.filter((s) => s.verified !== false).length;
     const unverified = stacks.length - verified;
@@ -161,7 +161,7 @@ describe("the README's honesty claim", () => {
     // headline "70-entry framework registry (55 frameworks, 15 language bases)"
     // is the first thing anyone reads, and nothing was checking it. Adding one
     // entry would have quietly made all three wrong at once.
-    if (!isAgentReadyItself()) return t.skip("not agent-ready — its README was replaced");
+    if (!isUnrenamed()) return t.skip("not agent-ready — its README was replaced");
     const stacks = loadRegistry();
     const frameworks = stacks.filter((s) => s.tier === "framework").length;
     const readme = readIfExists(at("README.md"));
@@ -175,7 +175,7 @@ ${stacks.length - frameworks} language bases)`) ||
   });
 
   it("does not pin an exact test count, which changes every commit", (t) => {
-    if (!isAgentReadyItself()) return t.skip("not agent-ready — its README was replaced");
+    if (!isUnrenamed()) return t.skip("not agent-ready — its README was replaced");
     assert.doesNotMatch(readIfExists(at("README.md")), /runs \*\*\d+ tests\*\*/);
   });
 });
@@ -187,7 +187,7 @@ describe("the generated stack brief", () => {
   // tooling's own test gate moved to a script of its own (`test:tooling` now), so the file an agent
   // reads to learn the gates contradicted the gates.
   it("is what the generator would write today", (t) => {
-    if (!isAgentReadyItself()) return t.skip("not agent-ready — a project regenerates its own");
+    if (!isUnrenamed()) return t.skip("not agent-ready — a project regenerates its own");
     const expected = renderDoc(detectResolved(), pkg.vibe.gates);
     assert.equal(
       readIfExists(at("docs/STACK.md")),

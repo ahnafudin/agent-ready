@@ -5,7 +5,7 @@
 //   1. git hooks first (core.hooksPath=.githooks) — so a later `bd init`
 //      CHAINS the auto-version hook instead of orphaning it
 //   2. personalise a pristine copy — reset the version to 0.1.0 and give the
-//      project its own README (agent-ready's moves to docs/AGENT-READY.md);
+//      project its own README (agent-ready's moves to docs/TOOLING.md);
 //      keyed off `vibe.pristine`, which step 3 then clears
 //   3. stack detection — read the framework markers, fill package.json's
 //      `vibe.gates`, the .gitignore managed block and docs/STACK.md
@@ -29,7 +29,7 @@ import { join } from "node:path";
 import {
   at,
   git,
-  isAgentReadyItself,
+  isUnrenamed,
   norm,
   note as write,
   PLACEHOLDER_NAME,
@@ -107,7 +107,7 @@ if (!bdVersion.ok) {
   note("  https://github.com/gastownhall/beads  (or `brew install beads`)");
   note("Avoid CGO-less `go install` builds — embedded Dolt refuses to open with them.");
   note("Then re-run `npm run setup`.");
-} else if (isAgentReadyItself()) {
+} else if (isUnrenamed()) {
   // `bd init` bakes this project's identity into .beads/ — the issue prefix, a
   // project_id UUID and the Dolt sync remote — and then COMMITS it. Run on a
   // copy that is still called "my-project" and every downstream user of that
