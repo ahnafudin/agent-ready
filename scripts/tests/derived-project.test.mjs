@@ -7,12 +7,13 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, write
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, before, describe, it } from "node:test";
-import { at, ROOT, tryRun } from "../lib/util.mjs";
-import { OWN_README_MARKER } from "../personalize.mjs";
+import { at, isUnrenamed, ROOT, tryRun } from "../lib/util.mjs";
+import { OWN_README_MARKER, UPSTREAM_ONLY } from "../personalize.mjs";
 
-// Set when we recurse into the copy, so the copy's own run of this file skips
-// (it would otherwise clone itself forever).
+// Only agent-ready itself simulates a copy: INSIDE is the copy's own run (it would clone itself
+// forever), and a project made from agent-ready has nothing of ours left to check.
 const INSIDE = process.env.TOOLING_DERIVED_TEST === "1";
+const SKIP = (INSIDE && "running inside the simulation") || (!isUnrenamed() && "only agent-ready itself simulates a copy");
 const PROJECT_NAME = "derived-smoke-test";
 
 let dir = null;
@@ -28,7 +29,7 @@ function node(args, cwd, env = {}) {
 }
 
 before(() => {
-  if (INSIDE) return;
+  if (SKIP) return;
   // Exactly what a copy contains: the tracked files. Not node_modules,
   // not .beads, not anything else lying around this working tree.
   const listed = tryRun("git", ["ls-files"]);
@@ -63,7 +64,7 @@ after(() => {
   if (dir) rmSync(dir, { recursive: true, force: true });
 });
 
-describe("a project made from agent-ready", { skip: INSIDE && "running inside the simulation" }, () => {
+describe("a project made from agent-ready", { skip: SKIP }, () => {
   const pkg = () => JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
   const read = (rel) => readFileSync(join(dir, rel), "utf8");
 
@@ -91,6 +92,12 @@ describe("a project made from agent-ready", { skip: INSIDE && "running inside th
     assert.ok(!existsSync(join(dir, "LICENSE")), "agent-ready's licence would claim the new project");
     assert.match(read("docs/TOOLING-LICENSE"), /^MIT License/, "the tooling's licence notice must survive");
     assert.ok(!existsSync(join(dir, "CONTRIBUTING.md")), "a guide to contributing to agent-ready is noise here");
+  });
+
+  it("drops what only serves agent-ready's own repository", () => {
+    // verify-stacks would scaffold a dozen frameworks every month on the new project's CI.
+    for (const rel of UPSTREAM_ONLY) assert.ok(existsSync(at(rel)), `${rel} is listed but agent-ready no longer has it`);
+    for (const rel of UPSTREAM_ONLY) assert.ok(!existsSync(join(dir, rel)), `${rel} survived into the project`);
   });
 
   it("runs ITS gates, not agent-ready's maintenance checks", () => {

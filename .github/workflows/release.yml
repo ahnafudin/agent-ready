@@ -1,0 +1,54 @@
+# Publish a GitHub release whenever main reaches a version that has no tag yet, then the npm CLI.
+# The version comes from package.json, which the post-commit hook bumps from conventional commits.
+name: release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Tag and release the new version
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if gh release view "$version" >/dev/null 2>&1; then
+            echo "$version is already released"
+            exit 0
+          fi
+          gh release create "$version" --target "$GITHUB_SHA" --title "$version" --generate-notes
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  # Needs npm trusted publishing configured for this repo, then the repository variable NPM_PUBLISH=true.
+  npm:
+    needs: release
+    if: needs.release.outputs.version != '' && vars.NPM_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish the CLI
+        working-directory: packages/agent-ready
+        run: |
+          cp ../../LICENSE .
+          npm install -g npm@latest
+          npm publish --provenance --access public

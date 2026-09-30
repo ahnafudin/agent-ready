@@ -1,0 +1,27 @@
+name: Bug
+description: A command, hook or gate does the wrong thing.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command you ran, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: Paste the full output of the command (for the gate, `npm run gate`).
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Node version (`node --version`), and the agent you use, if any.
+      placeholder: Windows 11, Node 24.1.0
+    validations:
+      required: true

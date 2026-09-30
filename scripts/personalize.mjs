@@ -16,6 +16,20 @@ export const OWN_CONTRIBUTING_MARKER = "<!-- tooling:contributing -->";
  * here: a comment in LICENSE would stop GitHub recognising it as MIT.)
  */
 const OWN_LICENSE = /^Copyright \(c\) [\d, -]+ ahnafudin$/m;
+/** What serves agent-ready's own repository; in a project it misleads, or spends CI minutes on our registry. */
+export const UPSTREAM_ONLY = [
+  "CODE_OF_CONDUCT.md",
+  "SECURITY.md",
+  ".github/ISSUE_TEMPLATE",
+  ".github/pull_request_template.md",
+  ".github/assets",
+  ".github/workflows/verify-stacks.yml",
+  ".github/workflows/release.yml",
+  ".github/workflows/slop-action.yml",
+  ".claude-plugin",
+  "packages",
+  "slop",
+];
 export const FRESH_VERSION = "0.1.0";
 const KEPT_AS = join("docs", "TOOLING.md");
 const LICENSE_KEPT_AS = join("docs", "TOOLING-LICENSE");
@@ -102,6 +116,14 @@ export function personalize({ root = ROOT } = {}) {
   if (existsSync(contributingPath) && readFileSync(contributingPath, "utf8").includes(OWN_CONTRIBUTING_MARKER)) {
     rmSync(contributingPath);
     changed.push("CONTRIBUTING.md (agent-ready's, removed)");
+  }
+
+  // 5. Safe to remove outright: this only runs once, on a fresh copy.
+  for (const rel of UPSTREAM_ONLY) {
+    const path = join(root, rel);
+    if (!existsSync(path)) continue;
+    rmSync(path, { recursive: true, force: true });
+    changed.push(`${rel} (agent-ready's own, removed)`);
   }
 
   return { skipped: null, changed };

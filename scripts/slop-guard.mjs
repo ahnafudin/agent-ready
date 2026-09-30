@@ -27,7 +27,8 @@ async function main() {
   } catch {
     return;
   }
-  const reason = slopReason(payload);
+  // As a plugin this file lives outside the project; the project's own config comes from its root.
+  const reason = slopReason(payload, process.env.CLAUDE_PROJECT_DIR || ROOT);
   if (reason) process.stdout.write(JSON.stringify({ decision: "block", reason }));
 }
 
