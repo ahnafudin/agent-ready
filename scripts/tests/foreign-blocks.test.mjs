@@ -3,8 +3,10 @@
 
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { readFileSync, writeFileSync } from "node:fs";
-import { at, foreignBlocks, withForeignBlocks } from "../lib/util.mjs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { foreignBlocks, withForeignBlocks } from "../lib/util.mjs";
 import { renderStub, sync, TARGETS } from "../sync-agents.mjs";
 
 const OTHER = ["<!-- other-tool:start -->", "- a line the other tool manages.", "<!-- other-tool:end -->"].join("\n");
@@ -91,25 +93,28 @@ describe("withForeignBlocks", () => {
 
 describe("sync() on a real pointer file", () => {
   // Proves the pieces above are wired together: every piece can be right and sync() still wipe the file.
+  // Runs in a scratch root: the suite runs in parallel, and other tests copy this checkout.
   it("keeps another tool's block instead of deleting it", () => {
-    const path = at(TARGETS.find((t) => t.path === "GEMINI.md").path);
-    const original = readFileSync(path, "utf8");
+    const root = mkdtempSync(join(tmpdir(), "sync-"));
     try {
+      sync({ root });
+      const path = join(root, "GEMINI.md");
+
       // 1. Another installer appends its block; `--check` rightly says `agents:sync` would rewrite the file.
-      writeFileSync(path, `${original.trimEnd()}\n\n${OTHER}\n`);
-      assert.deepEqual(sync({ check: true }).stale, ["GEMINI.md"]);
+      writeFileSync(path, `${readFileSync(path, "utf8").trimEnd()}\n\n${OTHER}\n`);
+      assert.deepEqual(sync({ root, check: true }).stale, ["GEMINI.md"]);
 
       // 2. Running what the message says must keep the other tool's block.
-      sync();
+      sync({ root });
       assert.ok(readFileSync(path, "utf8").includes(OTHER), "agents:sync deleted the other tool's block");
 
       // 3. And now it settles: the gate is green and stays green.
-      assert.deepEqual(sync({ check: true }).stale, [], "the file never reaches a steady state");
-      sync();
+      assert.deepEqual(sync({ root, check: true }).stale, [], "the file never reaches a steady state");
+      sync({ root });
       assert.ok(readFileSync(path, "utf8").includes(OTHER));
-      assert.deepEqual(sync({ check: true }).stale, []);
+      assert.deepEqual(sync({ root, check: true }).stale, []);
     } finally {
-      writeFileSync(path, original);
+      rmSync(root, { recursive: true, force: true });
     }
   });
 });

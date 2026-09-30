@@ -4,9 +4,9 @@
 // Windows checkouts turn symlinks into text. `--check` reports drift and writes nothing.
 
 import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { at, foreignBlocks, parseFlags, readIfExists, withForeignBlocks, writeIfChanged } from "./lib/util.mjs";
+import { at, foreignBlocks, parseFlags, readIfExists, ROOT, withForeignBlocks, writeIfChanged } from "./lib/util.mjs";
 
 const CANONICAL = "AGENTS.md";
 
@@ -88,11 +88,11 @@ export function renderStub(target) {
   return lines.join("\n");
 }
 
-export function sync({ check = false } = {}) {
+export function sync({ check = false, root = ROOT } = {}) {
   const stale = [];
   const written = [];
   for (const target of TARGETS) {
-    const path = at(target.path);
+    const path = join(root, target.path);
     const existing = readIfExists(path);
     // Keep fenced regions other tools (bd, rules installers) manage in this file; we own only the rest.
     const next = withForeignBlocks(renderStub(target), foreignBlocks(existing));
