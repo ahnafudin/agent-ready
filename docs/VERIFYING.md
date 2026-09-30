@@ -31,8 +31,11 @@ be reverted alone.
 ## Where it runs
 
 `.github/workflows/verify-stacks.yml` does all of the above on GitHub's runners,
-which already ship PHP, Composer, a JDK, Maven, Gradle, the .NET SDK, Ruby, Node,
-Go, Python and Rust. Nothing is installed on anybody's machine.
+which already ship PHP, Composer, a JDK, Maven, Gradle, the .NET SDK, Node and
+Rust. The rest come from each toolchain's setup action: Go (the image only caches
+it), Python (the image's own refuses `pip install`, PEP 668), Ruby (for bundler),
+Bun, Deno, Dart, Flutter, Elixir and Helm. Nothing is installed on anybody's
+machine.
 
 It runs on demand, on any change to `stacks.json`, and **monthly** — because
 `verified` rots. Angular's test gate was verified once and then broke silently
@@ -58,14 +61,24 @@ real thing:
 | `dotnet` | `dotnet format --verify-no-changes` fails on the output of `dotnet new` itself, making every new .NET project start red |
 | `swift` | lint gate was `swiftlint`, which is a separate install and exits 127 on a stock machine |
 | `wordpress` | `phpcs --standard=WordPress` named a standard and no target, so it exited 3 with "You must supply at least one file or directory" |
+| `remix` | detected as **React + Vite** — a React Router 7 app is a Vite app with `react`, so react-vite's two signals beat remix's one `react-router.config.ts` |
+| `gradle` | the typecheck gate named `compileKotlin`, which a Java-only build does not have, so `gradle init`'s Java application failed it |
+| `laravel` | the typecheck gate was PHPStan, which laravel/laravel does not install: exit 127 on every new project |
+| `elixir` | the typecheck gate was `mix dialyzer`, a task from the dialyxir dependency that neither `mix new` nor `mix phx.new` adds |
+| `symfony` | the lint and typecheck gates were PHP CS Fixer and PHPStan, which neither symfony/skeleton nor Symfony's test-pack installs: exit 127 |
 
-Four of those share one cause, and it is now a rule: **a framework built on
+Five of those share one cause, and it is now a rule: **a framework built on
 another must carry more detection signals than the one it is built on**, because
 ties break alphabetically. See the `detect` notes in `scripts/stacks.schema.json`.
-A fifth — `slim` losing to `docker-compose` — is the same shape without the
+A sixth — `slim` losing to `docker-compose` — is the same shape without the
 inheritance: infrastructure entries now carry a negative weight, because a
 compose file, a chart or some `.tf` usually sits ALONGSIDE an application rather
 than being the project.
+
+Four more share another: **a tool the project's own creator does not install is
+not a default gate.** `swiftlint`, PHPStan in Laravel, PHP CS Fixer and PHPStan in
+Symfony, and dialyzer in Elixir each turned every new project's gate red, so each
+is now a convention telling you to add it to `tooling.gates` once installed.
 
 A separate lesson runs through the gate failures: **a green test gate means
 different things in different languages.** `pytest`, `bun test` and `swift test`
@@ -75,14 +88,15 @@ to rediscover it per project.
 
 ## Verify what the entry actually claims
 
-Three entries cannot have every gate run on a CI runner, and each is scoped to
-the part that is genuinely its own — not waved through, and not left unknown.
+Four entries do not have every gate run here. Each is scoped deliberately, with
+the reason on record — not waved through, and not left unknown.
 
 | Entry | Scoped to | Why the rest is not run here |
 |---|---|---|
 | `unity` | detection | needs a licence and a ~10GB editor |
 | `godot` | detection | its build is an editor export |
 | `wordpress` | `lint` | a real WP suite needs the WP test harness and a database |
+| `fastapi` | `typecheck`, `test` | fastapi-new's own `main.py` fails ruff 0.16's default import rule (`I001`); the lint gate is the python base's `ruff check .`, which `django` and `streamlit` run |
 
 `unity` and `godot` **declare no gates at all**, so detection is the only thing
 that can be wrong about them, and that is checkable without either editor. They
@@ -101,6 +115,51 @@ The distinction matters. "Cannot be verified" would have left three permanent
 unknowns in a registry whose whole value is that its claims are checked. What was
 actually unverifiable was a build path, an editor export, and a database — none
 of which these entries promise.
+
+## When the creator leaves the gate's tool out
+
+Four creators produce a project without the tool its gate runs, although the
+framework's docs name the one-line setup. The fixture runs that documented step,
+so the job checks the gate, not the setup:
+
+| Entry | On the pristine scaffold | Setup the fixture runs |
+|---|---|---|
+| `angular` | `ng lint`: "Cannot find "lint" target" | `ng add angular-eslint` |
+| `nuxt` | `nuxi typecheck` exits 1, asking for a type checker | `npm install -D vue-tsc typescript@6` |
+| `astro` | `astro check` logs an error and **exits 0**, having checked nothing | `npm install -D @astrojs/check typescript@6` |
+| `symfony` | no phpunit, so no `bin/phpunit` to run | `composer require --dev symfony/test-pack` |
+
+`astro` is the dangerous one: a gate that passes without checking is the shape
+"The verifier itself" warns about. TypeScript stays at 6 for both, because vue-tsc
+cannot load TypeScript 7 and `@astrojs/check` supports only 5 and 6.
+
+## When the creator's own output is red
+
+The registry's gate is right and the generated project really fails it. The job
+then scaffolds another official template, or scopes the gate, and its matrix
+comment says which and why:
+
+- `adonisjs`: the `api` kit regenerates `database/schema.ts` on one line during
+  `create`, failing the kit's own prettier rule; the job uses the `hypermedia` kit.
+- `expo`: the default template fails its own `react-hooks/set-state-in-effect`
+  rule; the job uses `blank-typescript`. `expo lint`'s first run installs ESLint
+  and then cannot load it, so the fixture runs that documented setup once.
+- `fastapi`: fastapi-new's `main.py` fails ruff 0.16's default import rule; the
+  job runs typecheck and test (see the table above).
+
+## Not in the matrix
+
+These entries are marked verified but are not re-run here:
+
+| Entry | Why |
+|---|---|
+| `android`, `cpp`, `terraform` | no command-line project creator |
+| `docker-compose` | its creator, `docker init`, ships with Docker Desktop, not the runner's Docker Engine |
+| `flask` | no project creator; the tutorial's project is written by hand |
+| `python`, `php`, `ruby` | language bases; their gates run under the frameworks built on them (django, fastapi and streamlit; codeigniter4 and slim; sinatra and rails) |
+| `electron` | the official creator (Electron Forge) writes no `build` script, and the entry's build gate requires one |
+| `leptos` | `cargo leptos new` refuses to run without a terminal |
+| `wails` | needs the wails CLI and WebKitGTK 4.0, which Ubuntu 24.04 no longer ships |
 
 ## The verifier itself
 

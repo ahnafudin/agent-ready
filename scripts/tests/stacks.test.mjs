@@ -139,6 +139,19 @@ describe("detection", () => {
     assert.equal(detectResolved(withVite, stacks).primary.id, "react-vite");
   });
 
+  it("detects a React Router 7 app as remix, with react-vite as a secondary", () => {
+    // The shape create-react-router writes; react-vite's two signals used to outrank remix's one.
+    const dir = repo({
+      "package.json": pkg({ dependencies: { react: "19.0.0", "react-router": "7.0.0" }, devDependencies: { "@react-router/dev": "7.0.0", vite: "7.0.0" } }),
+      "react-router.config.ts": "export default {};",
+      "vite.config.ts": "export default {};",
+      "app/root.tsx": "export default function App() {}",
+    });
+    const { primary, secondary } = detectResolved(dir, stacks);
+    assert.equal(primary.id, "remix");
+    assert.ok(secondary.some((s) => s.id === "react-vite"));
+  });
+
   it("detects Laravel from artisan + composer content, not just PHP", () => {
     const dir = repo({
       artisan: "#!/usr/bin/env php",
