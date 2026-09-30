@@ -4,7 +4,7 @@
 
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { checkFile, describe, slopConfig } from "./lib/slop.mjs";
+import { checkFile, describe, slopConfig, validateCommentRegistry } from "./lib/slop.mjs";
 import { note as write, ROOT, tryRun } from "./lib/util.mjs";
 
 const note = (msg) => write(msg, "[slop] ");
@@ -24,12 +24,17 @@ export function findSlop(paths = [], root = ROOT) {
 
 /** Prints the findings; returns the exit code the gate should see. */
 export function reportSlop(paths = [], root = ROOT) {
+  const invalid = validateCommentRegistry();
+  if (invalid.length) {
+    for (const error of invalid) note(`scripts/comments.json: ${error}`);
+    return 1;
+  }
   const { config, hits, skipped } = findSlop(paths, root);
   if (skipped) {
     note(`skipped — ${skipped}`);
     return 0;
   }
-  for (const hit of hits) note(describe(hit, config.maxCommentLines));
+  for (const hit of hits) note(describe(hit, config));
   if (hits.length) {
     note(`${hits.length} comment block(s) over ${config.maxCommentLines} lines — rules: docs/anti-slop/`);
     return 1;

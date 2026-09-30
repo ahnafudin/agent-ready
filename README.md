@@ -204,6 +204,8 @@ docs/
 scripts/
   stacks.json          the framework registry (DATA — add frameworks here)
   stacks.schema.json   its schema, enforced by the test suite
+  comments.json        comment syntax per language (DATA — add languages here), with sources
+  comments.schema.json its schema, enforced before every comment check
   stacks.mjs           detect → package.json / .gitignore / docs/STACK.md
   gate.mjs             `npm run gate`
   version.mjs          semver source of truth + every manifest it syncs

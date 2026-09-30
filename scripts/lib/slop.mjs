@@ -1,66 +1,124 @@
-// scripts/lib/slop.mjs — finds comment blocks longer than the anti-slop limit, in any common language.
+// scripts/lib/slop.mjs — finds comment blocks over the anti-slop limit, using scripts/comments.json.
 
-import { readFileSync } from "node:fs";
-import { basename, extname } from "node:path";
-import { readJson } from "./util.mjs";
+import { closeSync, openSync, readFileSync, readSync } from "node:fs";
+import { basename } from "node:path";
+import { validate } from "./jsonschema.mjs";
+import { at, readJson } from "./util.mjs";
 
 export const DEFAULT_MAX_COMMENT_LINES = 3;
 
-const C_FAMILY = { line: ["//"], block: ["/*", "*/"] };
-const HASH = { line: ["#"] };
-const DASH = { line: ["--"] };
-
-const BY_EXT = {
-  ...Object.fromEntries(
-    "js mjs cjs jsx ts tsx mts cts java kt kts scala groovy gradle c h cc cpp cxx hpp cs go rs swift dart php scss less vue svelte astro"
-      .split(" ")
-      .map((e) => [`.${e}`, C_FAMILY]),
-  ),
-  ".css": { block: ["/*", "*/"] },
-  ...Object.fromEntries(
-    "py rb sh bash zsh fish ps1 yml yaml toml r pl pm ex exs tf hcl nim cr".split(" ").map((e) => [`.${e}`, HASH]),
-  ),
-  ...Object.fromEntries("sql lua hs elm".split(" ").map((e) => [`.${e}`, DASH])),
-};
-const BY_NAME = { Dockerfile: HASH, Makefile: HASH, Gemfile: HASH, Rakefile: HASH };
-
-/** The comment syntax of a file, or null when the checker does not know the language. */
-export function commentStyle(path) {
-  const name = basename(path);
-  return BY_NAME[name] ?? BY_EXT[extname(name).toLowerCase()] ?? (extname(name) === "" ? HASH : null);
+/** Schema errors plus what a schema cannot state (double claims, unreachable entries); [] when sound. */
+export function validateCommentRegistry(path = at("scripts", "comments.json"), schemaPath = at("scripts", "comments.schema.json")) {
+  const doc = readJson(path);
+  if (!doc) return [`cannot parse ${path}`];
+  const schema = readJson(schemaPath);
+  const errors = schema ? validate(doc, schema).map((e) => `schema ${e}`) : [`cannot parse ${schemaPath}`];
+  const ids = new Set();
+  const owner = new Map();
+  const claim = (kind, key, id) => {
+    const prev = owner.get(`${kind} ${key}`);
+    if (prev) errors.push(`${kind} "${key}" is claimed by both "${prev}" and "${id}"`);
+    owner.set(`${kind} ${key}`, id);
+  };
+  for (const lang of doc.languages ?? []) {
+    if (ids.has(lang.id)) errors.push(`duplicate id "${lang.id}"`);
+    ids.add(lang.id);
+    if (!(lang.extensions || lang.filenames || lang.interpreters)) errors.push(`"${lang.id}" matches no file`);
+    if (!(lang.line || lang.block)) errors.push(`"${lang.id}" has no comment syntax`);
+    for (const ext of lang.extensions ?? []) claim("extension", ext, lang.id);
+    for (const name of lang.filenames ?? []) claim("filename", name, lang.id);
+    for (const bin of lang.interpreters ?? []) claim("interpreter", bin, lang.id);
+  }
+  for (const group of doc.skipped ?? []) {
+    for (const ext of group.extensions) {
+      const id = owner.get(`extension ${ext}`);
+      if (id) errors.push(`extension "${ext}" is skipped but claimed by "${id}"`);
+    }
+  }
+  return errors;
 }
 
-/** Comment blocks longer than `max` lines, as `{ line, lines }` (1-based start line). */
-export function longComments(text, style, max = DEFAULT_MAX_COMMENT_LINES) {
+/** The comment registry, indexed by file name, suffix (longest first) and shebang interpreter. */
+export function loadRegistry(path = at("scripts", "comments.json")) {
+  const { languages } = readJson(path);
+  const byName = new Map();
+  const byInterpreter = new Map();
+  const suffixes = [];
+  for (const lang of languages) {
+    for (const name of lang.filenames ?? []) byName.set(name, lang);
+    for (const bin of lang.interpreters ?? []) byInterpreter.set(bin, lang);
+    for (const ext of lang.extensions ?? []) suffixes.push([ext, lang]);
+  }
+  suffixes.sort((a, b) => b[0].length - a[0].length);
+  return { languages, byName, byInterpreter, suffixes };
+}
+
+let registry = null;
+const defaultRegistry = () => (registry ??= loadRegistry());
+
+/** The program a `#!` line runs: `#!/usr/bin/env -S deno run` → deno, `#!/bin/sh` → sh. */
+export function shebangInterpreter(firstLine) {
+  if (!firstLine.startsWith("#!")) return null;
+  const words = firstLine.slice(2).trim().split(/\s+/);
+  let i = 0;
+  if (basename(words[0] ?? "") === "env") {
+    i = 1;
+    while (words[i]?.startsWith("-")) i++;
+  }
+  return words[i] ? basename(words[i]) : null;
+}
+
+/** A file's language: exact name, then longest suffix, then shebang. null means skip the file. */
+export function languageOf(path, firstLine = "", reg = defaultRegistry()) {
+  const name = basename(path);
+  const named = reg.byName.get(name);
+  if (named) return named;
+  const lower = name.toLowerCase();
+  const suffix = reg.suffixes.find(([ext]) => lower.endsWith(ext) && lower.length > ext.length);
+  if (suffix) return suffix[1];
+  const bin = shebangInterpreter(firstLine);
+  return bin ? (reg.byInterpreter.get(bin) ?? null) : null;
+}
+
+const startsWithAny = (line, prefixes) => (prefixes ?? []).some((p) => line.startsWith(p));
+const hasText = (s) => /[\p{L}\p{N}]/u.test(s);
+
+/** Comment blocks over the limit, as `{ line, lines, doc }`. A blank or code line ends a line-comment run;
+ * a block comment's opening and closing lines count only when they carry text. */
+export function longComments(text, lang, { max = DEFAULT_MAX_COMMENT_LINES, maxDoc = max } = {}) {
   const found = [];
-  const [open, shut] = style.block ?? [];
+  let open = null;
   let start = 0;
   let count = 0;
-  let inBlock = false;
-  const close = () => {
-    if (count > max) found.push({ line: start, lines: count });
+  let doc = false;
+  const flush = () => {
+    if (count > (doc ? maxDoc : max)) found.push({ line: start, lines: count, doc });
     count = 0;
   };
   text.split(/\r?\n/).forEach((raw, i) => {
     const line = raw.trim();
-    const lineNo = i + 1;
-    if (inBlock) {
-      if (line.includes(shut)) inBlock = false;
-      if (!/^\**\/?$/.test(line)) count++; // `*` and `*/` alone are frame, not content
+    if (open) {
+      const closes = line.includes(open[1]);
+      if (!closes || hasText(line.replace(open[1], ""))) count++;
+      if (closes) open = null;
       return;
     }
-    const lineComment = !(lineNo === 1 && line.startsWith("#!")) && (style.line ?? []).some((p) => line.startsWith(p));
-    const opensBlock = open !== undefined && line.startsWith(open);
-    if (!lineComment && !opensBlock) return close();
-    if (count === 0) start = lineNo;
-    if (opensBlock) {
-      inBlock = !line.includes(shut, open.length);
-      if (line.slice(open.length).replace(/^\*+/, "").replace(/\*+\/$/, "").trim() !== "") count++;
+    if ((i === 0 && line.startsWith("#!")) || startsWithAny(line, lang.code)) return flush();
+    const block = (lang.block ?? []).find(([opener]) => line.startsWith(opener));
+    if (!block && !startsWithAny(line, lang.line)) return flush();
+    if (count === 0) {
+      start = i + 1;
+      doc = startsWithAny(line, lang.doc);
+    }
+    if (!block) {
+      count++;
       return;
     }
-    count++;
+    const rest = line.slice(block[0].length);
+    if (!rest.includes(block[1])) open = block;
+    if (hasText(rest.replace(block[1], ""))) count++;
   });
-  close();
+  flush();
   return found;
 }
 
@@ -74,29 +132,52 @@ export function globToRegExp(glob) {
   return new RegExp(`^${body}$`);
 }
 
-/** `vibe.slop` from package.json with defaults: `{ maxCommentLines, ignore: RegExp[] }`. */
+const positive = (n, fallback) => (Number.isInteger(n) && n > 0 ? n : fallback);
+
+/** `vibe.slop` from package.json: `{ maxCommentLines, maxDocCommentLines, ignore: RegExp[] }`. */
 export function slopConfig(pkgPath) {
   const slop = readJson(pkgPath)?.vibe?.slop ?? {};
-  const max = Number.isInteger(slop.maxCommentLines) && slop.maxCommentLines > 0 ? slop.maxCommentLines : DEFAULT_MAX_COMMENT_LINES;
-  return { maxCommentLines: max, ignore: (slop.ignore ?? []).map(globToRegExp) };
+  const max = positive(slop.maxCommentLines, DEFAULT_MAX_COMMENT_LINES);
+  return {
+    maxCommentLines: max,
+    maxDocCommentLines: positive(slop.maxDocCommentLines, max),
+    ignore: (slop.ignore ?? []).map(globToRegExp),
+  };
+}
+
+function firstLineOf(path) {
+  const buf = Buffer.alloc(256);
+  let fd;
+  try {
+    fd = openSync(path, "r");
+    return buf.toString("utf8", 0, readSync(fd, buf, 0, buf.length, 0)).split(/\r?\n/)[0];
+  } catch {
+    return "";
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
 }
 
 /** Long comment blocks in one file; [] for an ignored, unreadable or unknown-language file. */
-export function checkFile(absPath, relPath, { maxCommentLines, ignore }) {
+export function checkFile(absPath, relPath, config, reg = defaultRegistry()) {
   const rel = relPath.split("\\").join("/");
-  if (ignore.some((re) => re.test(rel))) return [];
-  const style = commentStyle(rel);
-  if (!style) return [];
+  if (config.ignore.some((re) => re.test(rel))) return [];
+  const known = languageOf(rel, "", reg);
+  const lang = known ?? (basename(rel).includes(".") ? null : languageOf(rel, firstLineOf(absPath), reg));
+  if (!lang) return [];
   let text;
   try {
     text = readFileSync(absPath, "utf8");
   } catch {
     return [];
   }
-  return longComments(text, style, maxCommentLines).map((hit) => ({ file: rel, ...hit }));
+  const limits = { max: config.maxCommentLines, maxDoc: config.maxDocCommentLines };
+  return longComments(text, lang, limits).map((hit) => ({ file: rel, language: lang.id, ...hit }));
 }
 
 /** One line per finding, the form both the gate and the editor hook print. */
-export function describe(hit, max) {
-  return `${hit.file}:${hit.line} — ${hit.lines}-line comment (max ${max}). Say what the code cannot in one line; history belongs in the commit message. See docs/anti-slop/code.md.`;
+export function describe(hit, config) {
+  const max = hit.doc ? config.maxDocCommentLines : config.maxCommentLines;
+  const kind = hit.doc ? "doc comment" : "comment";
+  return `${hit.file}:${hit.line} — ${hit.lines}-line ${kind} (max ${max}). Say what the code cannot in one line; history belongs in the commit message. See docs/anti-slop/code.md.`;
 }

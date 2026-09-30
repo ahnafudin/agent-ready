@@ -12,6 +12,9 @@ improvements come back here through a fork and a pull request.
 - **A new framework** is one entry in `scripts/stacks.json` (see "Adding your framework" in the
   README). Say in the pull request how you verified its commands; `docs/VERIFYING.md` explains how
   an entry earns `"verified": true`.
+- **A new language for the comment check** is one entry in `scripts/comments.json`. Link the
+  language's official comment syntax in `source`, and list any prefix that looks like a comment but
+  is code (an attribute, a pragma, a hint) under `code`.
 
 ## Workflow
 

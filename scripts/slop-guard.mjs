@@ -16,7 +16,7 @@ export function slopReason(payload, root = ROOT) {
   const config = slopConfig(resolve(root, "package.json"));
   const hits = checkFile(abs, rel.startsWith("..") || isAbsolute(rel) ? abs : rel, config);
   if (hits.length === 0) return null;
-  return ["slop-guard: shorten these comments now.", ...hits.map((h) => describe(h, config.maxCommentLines))].join("\n");
+  return ["slop-guard: shorten these comments now.", ...hits.map((h) => describe(h, config))].join("\n");
 }
 
 async function main() {

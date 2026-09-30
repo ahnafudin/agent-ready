@@ -34,7 +34,8 @@ Then fill the placeholders — search for `TODO:fill`:
       Naming conventions · Conventions · Commands · design-token pointer in the
       "No AI slop" rule
 - [ ] `package.json` → `vibe.slop.ignore` — globs for vendored or generated code the comment check
-      should skip (`npm run slop` lists what it would flag today)
+      should skip (`npm run slop` lists what it would flag today); `maxDocCommentLines` if your API
+      docs (`/**`, `///`) need more than three lines
 - [ ] `CLAUDE.md` — project name only (everything else is imported from `AGENTS.md`; **do not copy
       rules here**)
 - [ ] `package.json` — **`name` first, before anything else.** While it is still `my-project`,

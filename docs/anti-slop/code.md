@@ -4,8 +4,11 @@ Slop is code that looks finished and says little. The comment rule is enforced: 
 `npm run slop` first in every project, and in Claude Code `scripts/slop-guard.mjs` flags a long
 comment right after the edit. The rest is checked in review (`/anti-slop`).
 
-`package.json` → `vibe.slop` sets `maxCommentLines` (default 3) and `ignore`, a list of globs for
-code you do not own, such as `vendor/**`.
+`package.json` → `vibe.slop` sets `maxCommentLines` (default 3), `maxDocCommentLines` (API doc comments
+such as `/**` and `///`; defaults to the same) and `ignore`, a list of globs for code you do not own.
+
+The check knows 76 languages from `scripts/comments.json`, one entry per language with a link to its
+official comment syntax. A file it cannot place with certainty, such as `.m`, is skipped, not guessed.
 
 ## Comments
 
