@@ -6,6 +6,7 @@ turns AI slop red.**
 
 [![gate](https://github.com/ahnafudin/agentready/actions/workflows/gate.yml/badge.svg)](https://github.com/ahnafudin/agentready/actions/workflows/gate.yml)
 [![release](https://img.shields.io/github/v/release/ahnafudin/agentready)](https://github.com/ahnafudin/agentready/releases)
+[![npm](https://img.shields.io/npm/v/%40ahnafudin%2Fagentready)](https://www.npmjs.com/package/@ahnafudin/agentready)
 [![license](https://img.shields.io/github/license/ahnafudin/agentready)](https://github.com/ahnafudin/agentready/blob/main/LICENSE)
 
 ![A four-line comment fails npm run slop; cut to one line, it passes.](https://raw.githubusercontent.com/ahnafudin/agentready/main/.github/assets/demo.svg)
@@ -45,7 +46,7 @@ Here the rules live in `docs/anti-slop/`, and the one a machine can check runs f
 | **Anti-slop** | Rules for code, UI, copy and reports in `docs/anti-slop/`, enforced wherever a machine can check them: `npm run gate` runs a comment check first, in every language the registry knows, and in Claude Code `slop-guard` names a long comment right after the edit. |
 | **Beads issue tracker** | Optional `bd` wiring with rules reconciled for this workflow: bd = cross-session issues, `docs/TASKS.md` = roadmap checklist, no auto-push. Silent when bd is not installed, and refuses to initialise until you rename the project — bd commits an identity, which must not ship from agentready. |
 | **Auto-versioning** | A conventional-commit hook bumps semver in `package.json` and syncs **every other manifest that exists** — inside the same commit. |
-| **No agent attribution** | Three layers, because one bad commit is permanent — it puts a bot in your GitHub contributor list, removable only by rewriting published history. `.claude/settings.json` stops Claude Code adding `Co-Authored-By`, a "Generated with" line or a session link, and arms the hooks at session start; `.githooks/commit-msg` strips them whatever tool wrote them — Cursor, Copilot, or one that does not exist yet; and `.github/workflows/attribution.yml` fails the build if any commit carries them anyway, which is the layer that covers a fresh clone where no hook is installed yet. The rule is **one author per commit**: every `Co-Authored-By` line goes, not only an agent's, because separating the two was tried by name (which deleted a real person whose address contained "amp") and by bot address (a list that must grow with every new agent, where one miss is permanent). Credit collaborators in the commit body. |
+| **No agent attribution** | Three layers, because one bad commit is permanent — it puts a bot in your GitHub contributor list, removable only by rewriting published history. `.claude/settings.json` stops Claude Code adding `Co-Authored-By`, a "Generated with" line or a session link, and arms the hooks at session start; `.githooks/commit-msg` strips them whatever tool wrote them — Cursor, Copilot, or one that does not exist yet; and `.github/workflows/attribution.yml` fails the build if any commit carries them anyway, which is the layer that covers a fresh clone where no hook is installed yet. The rule is **one author per commit**: every `Co-Authored-By` line goes, not only an agent's, because separating the two was tried by name (which deleted a real person whose address contained "amp") and by bot address (a list that must grow with every new agent, where one miss is permanent). Credit collaborators in the commit body. If one lands anyway, rewriting history removes the commit but not GitHub's cached contributor list; renaming the default branch away and back makes GitHub rebuild it. |
 | `scripts/setup.mjs` | One-shot, idempotent, ordered bootstrap (order matters — see below). |
 
 ## Framework support
@@ -119,10 +120,9 @@ Deliberately **not** touched, because they are release counters rather than semv
 ## Quick start
 
 ```bash
-# 1. copy it into a new project with a history of its own (nothing links back here)
-git clone --depth 1 https://github.com/ahnafudin/agentready.git my-project
-cd my-project
-rm -rf .git && git init
+# 1. a new project with a history of its own, named after its directory (nothing links back here)
+npx @ahnafudin/agentready init my-app
+cd my-app
 
 # 2. bootstrap (safe to re-run any time)
 npm install          # activates the version hook via postinstall
@@ -135,7 +135,14 @@ npm run gate         # should already run something sensible
 
 Then open any AI coding tool and type your task — the rules ride along automatically.
 
+Without npm, clone it (`git clone --depth 1 https://github.com/ahnafudin/agentready.git my-app`),
+replace its `.git` with a fresh `git init`, and set `name` in `package.json` before step 2: while it
+is `my-project`, the scripts treat the copy as agentready itself.
+
 ## Take it in parts
+
+**Into a repo you already have** — `npx @ahnafudin/agentready add` copies only what is missing.
+Every file you already have is kept and listed, and npm scripts are added without replacing any.
 
 **Only the hooks, in Claude Code** — the read guard, the slop guard and `/agentready:anti-slop`,
 in any project, without copying anything:
