@@ -5,8 +5,7 @@
 
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
-import { at, foreignBlocks, parseFlags, readIfExists, ROOT, withForeignBlocks, writeIfChanged } from "./lib/util.mjs";
+import { at, foreignBlocks, isMain, parseFlags, readIfExists, ROOT, withForeignBlocks, writeIfChanged } from "./lib/util.mjs";
 
 const CANONICAL = "AGENTS.md";
 
@@ -138,6 +137,6 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   process.exit(main(process.argv.slice(2)));
 }

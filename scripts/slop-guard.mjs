@@ -3,9 +3,8 @@
 // Same check as the gate (lib/slop.mjs); failing to read the payload or the file never blocks.
 
 import { isAbsolute, relative, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { checkFile, describe, slopConfig } from "./lib/slop.mjs";
-import { ROOT } from "./lib/util.mjs";
+import { isMain, ROOT } from "./lib/util.mjs";
 
 /** The block reason for one PostToolUse payload, or null when the edit is clean. */
 export function slopReason(payload, root = ROOT) {
@@ -32,6 +31,6 @@ async function main() {
   if (reason) process.stdout.write(JSON.stringify({ decision: "block", reason }));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   await main();
 }
