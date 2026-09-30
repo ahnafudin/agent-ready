@@ -1,22 +1,22 @@
 #!/usr/bin/env node
-// scripts/personalize.mjs — turns a pristine copy of agent-ready into this project, once, early in setup.
+// scripts/personalize.mjs — turns a pristine copy of agentready into this project, once, early in setup.
 // Fires only on a renamed package.json that still has `tooling.pristine` (stacks.mjs clears it next).
 
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { isMain, isUnrenamed, note as write, parseFlags, readJson, ROOT, writeIfChanged } from "./lib/util.mjs";
 
-/** Marks a README as still being agent-ready's own, and therefore replaceable. */
+/** Marks a README as still being agentready's own, and therefore replaceable. */
 export const OWN_README_MARKER = "<!-- tooling:readme -->";
-/** Marks a CONTRIBUTING.md as agent-ready's own, and therefore removable. */
+/** Marks a CONTRIBUTING.md as agentready's own, and therefore removable. */
 export const OWN_CONTRIBUTING_MARKER = "<!-- tooling:contributing -->";
 /**
- * Agent-ready's LICENSE, recognised by its holder line — a licence the owner
+ * agentready's LICENSE, recognised by its holder line — a licence the owner
  * wrote names someone else and is never moved. (The marker trick is not used
  * here: a comment in LICENSE would stop GitHub recognising it as MIT.)
  */
 const OWN_LICENSE = /^Copyright \(c\) [\d, -]+ ahnafudin$/m;
-/** What serves agent-ready's own repository; in a project it misleads, or spends CI minutes on our registry. */
+/** What serves agentready's own repository; in a project it misleads, or spends CI minutes on our registry. */
 export const UPSTREAM_ONLY = [
   "CODE_OF_CONDUCT.md",
   "SECURITY.md",
@@ -70,12 +70,12 @@ function projectReadme(pkg) {
 /**
  * Personalise a fresh copy. Returns `{ skipped, changed }`; `changed` lists the
  * files rewritten. Safe to call repeatedly — it does nothing once the project
- * has been personalised, and nothing at all in agent-ready itself.
+ * has been personalised, and nothing at all in agentready itself.
  */
 export function personalize({ root = ROOT } = {}) {
   const changed = [];
   if (isUnrenamed(root)) {
-    return { skipped: "this IS agent-ready (package.json still has the placeholder name)", changed };
+    return { skipped: "this IS agentready (package.json still has the placeholder name)", changed };
   }
   const pkgPath = join(root, "package.json");
   const raw = existsSync(pkgPath) ? readFileSync(pkgPath, "utf8") : null;
@@ -91,14 +91,14 @@ export function personalize({ root = ROOT } = {}) {
     if (writeIfChanged(pkgPath, next)) changed.push(`package.json (version → ${FRESH_VERSION})`);
   }
 
-  // 2. Left in place, agent-ready's README makes an agent think the project IS agent-ready.
+  // 2. Left in place, agentready's README makes an agent think the project IS agentready.
   //    Keep it as tooling docs; a README without the marker is never touched.
   const readmePath = join(root, "README.md");
   const readme = existsSync(readmePath) ? readFileSync(readmePath, "utf8") : "";
   if (readme.includes(OWN_README_MARKER)) {
     const keptPath = join(root, KEPT_AS);
     mkdirSync(dirname(keptPath), { recursive: true });
-    if (writeIfChanged(keptPath, readme)) changed.push(`${KEPT_AS.split("\\").join("/")} (agent-ready's docs kept here)`);
+    if (writeIfChanged(keptPath, readme)) changed.push(`${KEPT_AS.split("\\").join("/")} (agentready's docs kept here)`);
     if (writeIfChanged(readmePath, projectReadme(pkg))) changed.push("README.md (now describes this project)");
   }
 
@@ -108,14 +108,14 @@ export function personalize({ root = ROOT } = {}) {
   if (OWN_LICENSE.test(license)) {
     writeIfChanged(join(root, LICENSE_KEPT_AS), license);
     rmSync(licensePath);
-    changed.push(`LICENSE (agent-ready's, kept as ${LICENSE_KEPT_AS.split("\\").join("/")}; choose your own)`);
+    changed.push(`LICENSE (agentready's, kept as ${LICENSE_KEPT_AS.split("\\").join("/")}; choose your own)`);
   }
 
-  // 4. A guide to contributing to agent-ready has no place in a project.
+  // 4. A guide to contributing to agentready has no place in a project.
   const contributingPath = join(root, "CONTRIBUTING.md");
   if (existsSync(contributingPath) && readFileSync(contributingPath, "utf8").includes(OWN_CONTRIBUTING_MARKER)) {
     rmSync(contributingPath);
-    changed.push("CONTRIBUTING.md (agent-ready's, removed)");
+    changed.push("CONTRIBUTING.md (agentready's, removed)");
   }
 
   // 5. Safe to remove outright: this only runs once, on a fresh copy.
@@ -123,7 +123,7 @@ export function personalize({ root = ROOT } = {}) {
     const path = join(root, rel);
     if (!existsSync(path)) continue;
     rmSync(path, { recursive: true, force: true });
-    changed.push(`${rel} (agent-ready's own, removed)`);
+    changed.push(`${rel} (agentready's own, removed)`);
   }
 
   return { skipped: null, changed };
@@ -146,7 +146,7 @@ function main(argv = []) {
     return 0;
   }
   for (const c of changed) note(`updated ${c}`);
-  note(`agent-ready's own README is now ${KEPT_AS.split("\\").join("/")} — it documents scripts/.`);
+  note(`agentready's own README is now ${KEPT_AS.split("\\").join("/")} — it documents scripts/.`);
   return 0;
 }
 

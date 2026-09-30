@@ -37,7 +37,7 @@ describe("registry integrity", () => {
     assert.deepEqual(validateRegistry(), []);
   });
 
-  it("covers the framework families agent-ready advertises", () => {
+  it("covers the framework families agentready advertises", () => {
     const ids = new Set(stacks.map((s) => s.id));
     const promised = [
       "electron", "tauri", "wails",
@@ -323,7 +323,7 @@ describe("generated docs/STACK.md", () => {
   });
 });
 
-describe("apply(): agent-ready's own gates must not survive into a project", () => {
+describe("apply(): agentready's own gates must not survive into a project", () => {
   // These are non-empty, so the never-clobber rule would keep them and the gate would never run the project's build.
   const OWN_GATES = {
     lint: ["node scripts/sync-agents.mjs --check", "node scripts/stacks.mjs validate"],
@@ -351,11 +351,11 @@ describe("apply(): agent-ready's own gates must not survive into a project", () 
     assert.notDeepEqual(after.gates.lint, OWN_GATES.lint);
   });
 
-  it("keeps them in agent-ready itself, which is still unrenamed", () => {
+  it("keeps them in agentready itself, which is still unrenamed", () => {
     const dir = project("my-project", { stack: "node", pristine: true, gates: OWN_GATES });
     apply({ root: dir });
     const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).tooling;
-    assert.deepEqual(after.gates, OWN_GATES, "agent-ready maintains itself with these");
+    assert.deepEqual(after.gates, OWN_GATES, "agentready maintains itself with these");
     assert.equal(after.pristine, true);
   });
 
@@ -390,7 +390,7 @@ describe("apply() aimed at another project", () => {
     assert.ok(existsSync(join(dir, "docs", "STACK.md")), "apply must create the directory it writes into");
   });
 
-  it("writes to the directory named on the command line, not to agent-ready", () => {
+  it("writes to the directory named on the command line, not to agentready", () => {
     // `apply` is the one command that writes, so it must configure the named directory, never this repo.
     const dir = repo({ "package.json": pkg({ name: "elsewhere", dependencies: { express: "4.19.0" } }) });
     const before = readFileSync(OWN_STACK_DOC, "utf8");
@@ -400,7 +400,7 @@ describe("apply() aimed at another project", () => {
 
     const target = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
     assert.equal(target.tooling.stack, "express", "the named project must be the one configured");
-    assert.equal(readFileSync(OWN_STACK_DOC, "utf8"), before, "agent-ready must not have been touched");
+    assert.equal(readFileSync(OWN_STACK_DOC, "utf8"), before, "agentready must not have been touched");
   });
 
   it("refuses a mistyped flag rather than running as if it were absent", () => {

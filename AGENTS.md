@@ -198,7 +198,7 @@ bd close <id>           # complete work
 - **Worktrees:** every git worktree automatically shares the main repo's beads DB (no setup).
   Embedded Dolt is single-writer — serialized agents are fine; run `bd dolt start` (server mode)
   only if multiple agents must write in parallel.
-- **bd is optional.** If it is not installed, everything else in agent-ready still works —
+- **bd is optional.** If it is not installed, everything else in agentready still works —
   do not block on it, and do not install it unasked.
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git

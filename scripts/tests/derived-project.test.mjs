@@ -1,4 +1,4 @@
-// Guards that a project made from agent-ready inherits none of agent-ready's own scaffolding.
+// Guards that a project made from agentready inherits none of agentready's own scaffolding.
 // Copies the tracked files, renames and bootstraps the copy, then runs this whole suite inside it.
 
 import assert from "node:assert/strict";
@@ -10,10 +10,10 @@ import { after, before, describe, it } from "node:test";
 import { at, isUnrenamed, ROOT, tryRun } from "../lib/util.mjs";
 import { OWN_README_MARKER, UPSTREAM_ONLY } from "../personalize.mjs";
 
-// Only agent-ready itself simulates a copy: INSIDE is the copy's own run (it would clone itself
-// forever), and a project made from agent-ready has nothing of ours left to check.
+// Only agentready itself simulates a copy: INSIDE is the copy's own run (it would clone itself
+// forever), and a project made from agentready has nothing of ours left to check.
 const INSIDE = process.env.TOOLING_DERIVED_TEST === "1";
-const SKIP = (INSIDE && "running inside the simulation") || (!isUnrenamed() && "only agent-ready itself simulates a copy");
+const SKIP = (INSIDE && "running inside the simulation") || (!isUnrenamed() && "only agentready itself simulates a copy");
 const PROJECT_NAME = "derived-smoke-test";
 
 let dir = null;
@@ -64,7 +64,7 @@ after(() => {
   if (dir) rmSync(dir, { recursive: true, force: true });
 });
 
-describe("a project made from agent-ready", { skip: SKIP }, () => {
+describe("a project made from agentready", { skip: SKIP }, () => {
   const pkg = () => JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
   const read = (rel) => readFileSync(join(dir, rel), "utf8");
 
@@ -73,43 +73,43 @@ describe("a project made from agent-ready", { skip: SKIP }, () => {
     assert.ok(dir, "the copy should exist");
   });
 
-  it("starts its version history at 0.1.0, not at agent-ready's release", () => {
+  it("starts its version history at 0.1.0, not at agentready's release", () => {
     assert.equal(pkg().version, "0.1.0");
   });
 
-  it("gets a README about ITSELF, with agent-ready's kept as tooling docs", () => {
+  it("gets a README about ITSELF, with agentready's kept as tooling docs", () => {
     const readme = read("README.md");
-    assert.doesNotMatch(readme, /agent-ready/, "the project README must not describe agent-ready");
+    assert.doesNotMatch(readme, /agentready/, "the project README must not describe agentready");
     assert.ok(!readme.includes(OWN_README_MARKER));
     assert.match(readme, new RegExp(`^# ${PROJECT_NAME}`, "m"));
-    assert.match(read("docs/TOOLING.md"), /agent-ready/, "agent-ready's own README is still available");
+    assert.match(read("docs/TOOLING.md"), /agentready/, "agentready's own README is still available");
   });
 
   it("leaves the licence and the contribution guide to the new owner", () => {
-    // Agent-ready's MIT licence names ITS author, so at the root it would claim
+    // agentready's MIT licence names ITS author, so at the root it would claim
     // the new project. MIT requires the notice to travel with the copied
-    // tooling, so it is kept beside agent-ready's README instead of deleted.
-    assert.ok(!existsSync(join(dir, "LICENSE")), "agent-ready's licence would claim the new project");
+    // tooling, so it is kept beside agentready's README instead of deleted.
+    assert.ok(!existsSync(join(dir, "LICENSE")), "agentready's licence would claim the new project");
     assert.match(read("docs/TOOLING-LICENSE"), /^MIT License/, "the tooling's licence notice must survive");
-    assert.ok(!existsSync(join(dir, "CONTRIBUTING.md")), "a guide to contributing to agent-ready is noise here");
+    assert.ok(!existsSync(join(dir, "CONTRIBUTING.md")), "a guide to contributing to agentready is noise here");
   });
 
-  it("drops what only serves agent-ready's own repository", () => {
+  it("drops what only serves agentready's own repository", () => {
     // verify-stacks would scaffold a dozen frameworks every month on the new project's CI.
-    for (const rel of UPSTREAM_ONLY) assert.ok(existsSync(at(rel)), `${rel} is listed but agent-ready no longer has it`);
+    for (const rel of UPSTREAM_ONLY) assert.ok(existsSync(at(rel)), `${rel} is listed but agentready no longer has it`);
     for (const rel of UPSTREAM_ONLY) assert.ok(!existsSync(join(dir, rel)), `${rel} survived into the project`);
   });
 
-  it("runs ITS gates, not agent-ready's maintenance checks", () => {
+  it("runs ITS gates, not agentready's maintenance checks", () => {
     const { tooling } = pkg();
     assert.ok(!("pristine" in tooling), "the one-shot marker must be consumed");
     const flat = JSON.stringify(tooling.gates);
-    assert.doesNotMatch(flat, /sync-agents/, "that maintains agent-ready itself");
+    assert.doesNotMatch(flat, /sync-agents/, "that maintains agentready itself");
     assert.doesNotMatch(flat, /stacks\.mjs validate/, "so is that");
   });
 
   it("leaves the conventional `test` script free for the project", () => {
-    // Agent-ready's own suite lives at `test:tooling`; if it held `test`,
+    // agentready's own suite lives at `test:tooling`; if it held `test`,
     // `npm run test --if-present` would run 120 tooling tests as the project's.
     const { scripts } = pkg();
     assert.equal(scripts.test, undefined);
@@ -167,7 +167,7 @@ describe("a project made from agent-ready", { skip: SKIP }, () => {
     );
     const out = `${r.stdout}\n${r.stderr}`;
     assert.equal(r.status, 0, `the tooling suite must be green in a derived project:\n${out.slice(-2500)}`);
-    assert.match(out, /# fail 0/, "no test may fail merely because the repo is not agent-ready");
+    assert.match(out, /# fail 0/, "no test may fail merely because the repo is not agentready");
     assert.match(out, /# pass ([1-9]\d*)/, "the suite must actually have run");
   });
 });

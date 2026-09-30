@@ -323,7 +323,7 @@ export function apply({ force = false, root = ROOT } = {}) {
     delete tooling.pristine; // one-shot: they are this project's gates now
     pkg.tooling = tooling;
     if (writeIfChanged(pkgPath, JSON.stringify(pkg, null, indentOf(raw)) + "\n")) {
-      changed.push(pristine ? "package.json (replaced agent-ready's own gates)" : "package.json (tooling.gates)");
+      changed.push(pristine ? "package.json (replaced agentready's own gates)" : "package.json (tooling.gates)");
     }
   }
 

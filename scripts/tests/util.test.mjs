@@ -255,9 +255,9 @@ describe("isUnrenamed", () => {
     assert.equal(isUnrenamed(withName(null)), false);
   });
 
-  it("guards THIS repo — agent-ready must never ship a beads identity", (t) => {
-    // Only meaningful in agent-ready: a derived project has a real name, and this suite travels with it.
-    if (!isUnrenamed()) return t.skip("not agent-ready — this project has been renamed");
+  it("guards THIS repo — agentready must never ship a beads identity", (t) => {
+    // Only meaningful in agentready: a derived project has a real name, and this suite travels with it.
+    if (!isUnrenamed()) return t.skip("not agentready — this project has been renamed");
     assert.equal(isUnrenamed(), true, "package.json here must keep the placeholder name");
   });
 });

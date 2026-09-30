@@ -1,4 +1,4 @@
-name: agent-ready slop check
+name: agentready slop check
 description: Fails when a tracked file has a comment block over the anti-slop limit, in 76 languages.
 author: ahnafudin
 branding:

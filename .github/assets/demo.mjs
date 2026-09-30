@@ -22,7 +22,7 @@ const CLEAN = ["// Read-only order summary: items, subtotal, shipping, tax, tota
 
 /** A throwaway git repo holding the real checker, so the demo shows exactly what it prints. */
 function workspace() {
-  const dir = mkdtempSync(join(tmpdir(), "agent-ready-demo-"));
+  const dir = mkdtempSync(join(tmpdir(), "agentready-demo-"));
   for (const rel of ["package.json", "scripts/slop-check.mjs", "scripts/lib", "scripts/comments.json", "scripts/comments.schema.json"]) {
     cpSync(join(ROOT, rel), join(dir, rel), { recursive: true });
   }

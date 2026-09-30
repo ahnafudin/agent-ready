@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// agent-ready — starts a project from agent-ready, or adds its tooling to a repo that already exists.
-// Both fetch the agent-ready release matching this CLI's version, so the files were tested together.
+// agentready — starts a project from agentready, or adds its tooling to a repo that already exists.
+// Both fetch the agentready release matching this CLI's version, so the files were tested together.
 
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const SOURCE = "https://github.com/ahnafudin/agent-ready.git";
+const SOURCE = "https://github.com/ahnafudin/agentready.git";
 const PKG = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 const VERSION = PKG.version;
 const RUN = `npx ${PKG.name}`;
@@ -18,7 +18,7 @@ const USAGE = `usage:
   ${RUN} add [dir]    add the tooling to an existing repo (default: the current directory)
 
 options:
-  --source <git url or path>   where to fetch agent-ready from (default: ${SOURCE})
+  --source <git url or path>   where to fetch agentready from (default: ${SOURCE})
   --ref <tag or branch>        which version to fetch (default: v${VERSION})`;
 
 function git(args, cwd) {
@@ -27,7 +27,7 @@ function git(args, cwd) {
   return r.stdout;
 }
 
-/** A shallow clone of agent-ready at `ref` in `dir`, without its history; returns the tracked files. */
+/** A shallow clone of agentready at `ref` in `dir`, without its history; returns the tracked files. */
 function fetchStarter(dir, { source = SOURCE, ref = `v${VERSION}` } = {}) {
   const url = existsSync(source) ? pathToFileURL(resolve(source)).href : source;
   git(["clone", "--quiet", "--depth", "1", ...(ref ? ["--branch", ref] : []), url, dir]);
@@ -39,7 +39,7 @@ function fetchStarter(dir, { source = SOURCE, ref = `v${VERSION}` } = {}) {
 /** A directory name as an npm package name. */
 const packageName = (dir) => basename(dir).toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^[._-]+/, "") || "my-project";
 
-/** Clones agent-ready into an empty `dir` as a new repository named after the directory. */
+/** Clones agentready into an empty `dir` as a new repository named after the directory. */
 export function init(dir, options = {}) {
   const target = resolve(dir);
   if (existsSync(target) && readdirSync(target).length > 0) {
@@ -72,7 +72,7 @@ function mergePackageJson(path, starter, name) {
 export async function add(dir = ".", options = {}) {
   const target = resolve(dir);
   if (!existsSync(target)) throw new Error(`${dir} does not exist`);
-  const tmp = mkdtempSync(join(tmpdir(), "agent-ready-"));
+  const tmp = mkdtempSync(join(tmpdir(), "agentready-"));
   try {
     const files = fetchStarter(tmp, options);
     const { UPSTREAM_ONLY } = await import(pathToFileURL(join(tmp, "scripts", "personalize.mjs")).href);
@@ -141,7 +141,7 @@ async function main(argv) {
       return 0;
     }
   } catch (error) {
-    process.stderr.write(`agent-ready: ${error.message}\n`);
+    process.stderr.write(`agentready: ${error.message}\n`);
     return 1;
   }
   process.stdout.write(`${USAGE}\n`);

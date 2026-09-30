@@ -1,5 +1,5 @@
 <!-- tooling:contributing -->
-# Contributing to agent-ready
+# Contributing to agentready
 
 Thank you for helping. People start their own projects from a copy of this repository, and
 improvements come back here through a fork and a pull request.
@@ -38,7 +38,7 @@ improvements come back here through a fork and a pull request.
 `npm run gate` validates the registry against its schema, checks that the generated pointer files
 are in sync, and runs the whole suite (`node --test`, zero dependencies): every version-manifest
 planner, every detection rule, the commit-msg hook, the documented commands themselves, and a
-simulated project built from agent-ready.
+simulated project built from agentready.
 
 The invariants those tests protect, which are easy to break by accident:
 
@@ -49,7 +49,7 @@ The invariants those tests protect, which are easy to break by accident:
 - a polyglot repo must report **both** stacks, not just the loudest one;
 - every pointer file must restate the non-negotiables inline, not merely link to `AGENTS.md`;
 - no doc may print an `npm run <script> --flag` form that npm will swallow;
-- nothing that belongs to agent-ready may survive into a project made from it — the simulated
+- nothing that belongs to agentready may survive into a project made from it — the simulated
   project is the test for that.
 
 Two more rules without a test of their own:
@@ -57,7 +57,7 @@ Two more rules without a test of their own:
 - **Keep the tooling dependency-free.** Node's standard library only, so a copy works anywhere Node
   22+ does.
 - **Keep other people's product names out of the source.** Naming them reads as an endorsement or a
-  comparison. `bd` is the exception, because it ships with agent-ready.
+  comparison. `bd` is the exception, because it ships with agentready.
 
 ## License
 
