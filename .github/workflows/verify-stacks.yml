@@ -57,6 +57,13 @@ jobs:
           - id: laravel
             scaffold: composer create-project laravel/laravel fixture --no-interaction
 
+          # Symfony's testing docs add test-pack, whose phpunit recipe writes bin/phpunit.
+          - id: symfony
+            scaffold: |
+              composer create-project symfony/skeleton fixture --no-interaction
+              cd fixture && composer require --dev symfony/test-pack --no-interaction
+              ls vendor/bin
+
           # ---- JVM ----
           - id: quarkus
             scaffold: mvn -B io.quarkus.platform:quarkus-maven-plugin:create -DprojectGroupId=org.acme -DprojectArtifactId=fixture
