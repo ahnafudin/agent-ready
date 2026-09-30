@@ -1,14 +1,14 @@
 {
-  "name": "agent-ready",
-  "version": "0.15.3",
-  "displayName": "agent-ready",
+  "name": "agentready",
+  "version": "0.15.4",
+  "displayName": "agentready",
   "description": "Denies unbounded reads of long files, flags a comment over three lines right after an edit, and reviews a diff against the anti-slop rules.",
   "author": {
     "name": "ahnafudin",
     "url": "https://github.com/ahnafudin"
   },
-  "homepage": "https://github.com/ahnafudin/agent-ready",
-  "repository": "https://github.com/ahnafudin/agent-ready",
+  "homepage": "https://github.com/ahnafudin/agentready",
+  "repository": "https://github.com/ahnafudin/agentready",
   "license": "MIT",
   "keywords": ["anti-slop", "context", "hooks", "code-quality"],
   "commands": {

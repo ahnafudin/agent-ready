@@ -47,7 +47,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Publish the CLI
-        working-directory: packages/agent-ready
+        working-directory: packages/agentready
         run: |
           cp ../../LICENSE .
           npm install -g npm@latest

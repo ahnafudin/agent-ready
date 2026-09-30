@@ -9,9 +9,9 @@ import { after, describe, it } from "node:test";
 import { pathToFileURL } from "node:url";
 import { at, ROOT } from "../lib/util.mjs";
 
-const CLI = at("packages", "agent-ready", "cli.mjs");
-const skip = !existsSync(CLI) && "the CLI ships with agent-ready itself, not with a project made from it";
-const tmp = mkdtempSync(join(tmpdir(), "agent-ready-cli-"));
+const CLI = at("packages", "agentready", "cli.mjs");
+const skip = !existsSync(CLI) && "the CLI ships with agentready itself, not with a project made from it";
+const tmp = mkdtempSync(join(tmpdir(), "agentready-cli-"));
 after(() => rmSync(tmp, { recursive: true, force: true }));
 
 // This checkout is the source; `ref: ""` takes its current commit instead of a release tag.
@@ -19,7 +19,7 @@ const FROM_HERE = { source: ROOT, ref: "" };
 const load = () => import(pathToFileURL(CLI).href);
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 
-describe("agent-ready init", { skip }, () => {
+describe("agentready init", { skip }, () => {
   it("creates a repo named after its directory, with no history of ours", async () => {
     const { init } = await load();
     const dir = join(tmp, "Fresh App");
@@ -34,11 +34,11 @@ describe("agent-ready init", { skip }, () => {
     const dir = join(tmp, "busy");
     mkdirSync(dir);
     writeFileSync(join(dir, "keep.txt"), "mine");
-    assert.throws(() => init(dir, FROM_HERE), /not empty — .*agent-ready add/);
+    assert.throws(() => init(dir, FROM_HERE), /not empty — .*agentready add/);
   });
 });
 
-describe("agent-ready add", { skip }, () => {
+describe("agentready add", { skip }, () => {
   it("adds the tooling and keeps every file and script the repo already has", async () => {
     const { add } = await load();
     const dir = join(tmp, "existing");
@@ -73,7 +73,7 @@ describe("agent-ready add", { skip }, () => {
   });
 });
 
-describe("the agent-ready command", { skip }, () => {
+describe("the agentready command", { skip }, () => {
   it("refuses a flag it does not know", () => {
     const r = spawnSync(process.execPath, [CLI, "init", "x", "--forse"], { encoding: "utf8" });
     assert.equal(r.status, 2);
@@ -81,7 +81,7 @@ describe("the agent-ready command", { skip }, () => {
   });
 
   it("tells people to run it by the name it is published under", () => {
-    const { name } = readJson(at("packages", "agent-ready", "package.json"));
+    const { name } = readJson(at("packages", "agentready", "package.json"));
     const r = spawnSync(process.execPath, [CLI], { encoding: "utf8" });
     assert.ok(r.stdout.includes(`npx ${name} init <dir>`), r.stdout);
   });

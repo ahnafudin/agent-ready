@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Only the latest release gets fixes. A project made from agent-ready owns its copy of the tooling, so
+Only the latest release gets fixes. A project made from agentready owns its copy of the tooling, so
 update that copy from the latest release when a fix lands.
 
 ## Reporting a vulnerability

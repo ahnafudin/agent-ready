@@ -1,14 +1,14 @@
 <!-- tooling:readme -->
-# agent-ready
+# agentready
 
 **One set of rules every AI coding agent follows, one command that says the work is done, and a gate that
 turns AI slop red.**
 
-[![gate](https://github.com/ahnafudin/agent-ready/actions/workflows/gate.yml/badge.svg)](https://github.com/ahnafudin/agent-ready/actions/workflows/gate.yml)
-[![release](https://img.shields.io/github/v/release/ahnafudin/agent-ready)](https://github.com/ahnafudin/agent-ready/releases)
-[![license](https://img.shields.io/github/license/ahnafudin/agent-ready)](https://github.com/ahnafudin/agent-ready/blob/main/LICENSE)
+[![gate](https://github.com/ahnafudin/agentready/actions/workflows/gate.yml/badge.svg)](https://github.com/ahnafudin/agentready/actions/workflows/gate.yml)
+[![release](https://img.shields.io/github/v/release/ahnafudin/agentready)](https://github.com/ahnafudin/agentready/releases)
+[![license](https://img.shields.io/github/license/ahnafudin/agentready)](https://github.com/ahnafudin/agentready/blob/main/LICENSE)
 
-![A four-line comment fails npm run slop; cut to one line, it passes.](https://raw.githubusercontent.com/ahnafudin/agent-ready/main/.github/assets/demo.svg)
+![A four-line comment fails npm run slop; cut to one line, it passes.](https://raw.githubusercontent.com/ahnafudin/agentready/main/.github/assets/demo.svg)
 
 A project starter that makes a new repo **ready for AI coding agents** — structure and contracts only, no stack
 lock-in. Copy it, fill the placeholders, and every coding session starts with the right rules, the
@@ -37,13 +37,13 @@ Here the rules live in `docs/anti-slop/`, and the one a machine can check runs f
 | `AGENTS.md` | **Canonical rules, read by every agent.** Session working rules (docs-by-route, read-before-write, finish-100%, verify-before-claiming, no dead code, one-question rule, worktree isolation, completion report) + placeholders to fill per project. |
 | Per-tool pointers | `CLAUDE.md` (`@AGENTS.md` import + Claude-only extras) plus **generated** stubs for Copilot · Gemini CLI · Cursor · Windsurf · Cline/Roo · Junie · Aider. Each restates the non-negotiables inline, so an agent that ignores file references is still bound by them. **Coexists with other tools that write to the same files:** a region fenced off between `<!-- name:start -->` / `<!-- name:end -->` or `<!-- BEGIN name -->` / `<!-- END name -->` markers (bd writes one, and every rules installer has its own) is carried across instead of overwritten — this repo owns the generated part of those files, not the whole file. |
 | **Framework registry** | `scripts/stacks.json` — detection markers, gate commands, `.gitignore` lines, core-layer rule and conventions per framework. Adding one is **a JSON row, no code change**. Schema-validated by the test suite. |
-| **`npm run gate`** | One command in every language: lint → typecheck → test → build, stopping at the first failure. Polyglot repos (Tauri, a Next.js + FastAPI monorepo) run both sides. The first `stack:apply` in a renamed project swaps agent-ready's own gates for your framework's; after that they are yours. |
+| **`npm run gate`** | One command in every language: lint → typecheck → test → build, stopping at the first failure. Polyglot repos (Tauri, a Next.js + FastAPI monorepo) run both sides. The first `stack:apply` in a renamed project swaps agentready's own gates for your framework's; after that they are yours. |
 | `docs/STACK.md` | **Generated** per project: which framework was detected, where heavy logic belongs, the exact gate commands, framework conventions. The brief a fresh agent reads instead of guessing. |
 | `docs/` skeletons | `PRD` · `ARCHITECTURE` · `FEATURES` · `TASKS` · `ROADMAP` · `VERSIONING` — thin frames, not content. |
 | **Archive contract** | `docs/archive/STATUS_ARCHIVE.md` + `TASKS_ARCHIVE.md`: when work merges, its full story moves here and `AGENTS.md` keeps ≤ 1 bullet per domain — the always-loaded context never bloats. |
 | **Read guard** | `scripts/read-guard.mjs`, a Claude Code hook that denies reading a whole file over 400 lines without an offset/limit window, and says how to read the part you need instead. Whole files read to find one function are the largest single entries in a long session's context, and nothing takes them back out. |
 | **Anti-slop** | Rules for code, UI, copy and reports in `docs/anti-slop/`, enforced wherever a machine can check them: `npm run gate` runs a comment check first, in every language the registry knows, and in Claude Code `slop-guard` names a long comment right after the edit. |
-| **Beads issue tracker** | Optional `bd` wiring with rules reconciled for this workflow: bd = cross-session issues, `docs/TASKS.md` = roadmap checklist, no auto-push. Silent when bd is not installed, and refuses to initialise until you rename the project — bd commits an identity, which must not ship from agent-ready. |
+| **Beads issue tracker** | Optional `bd` wiring with rules reconciled for this workflow: bd = cross-session issues, `docs/TASKS.md` = roadmap checklist, no auto-push. Silent when bd is not installed, and refuses to initialise until you rename the project — bd commits an identity, which must not ship from agentready. |
 | **Auto-versioning** | A conventional-commit hook bumps semver in `package.json` and syncs **every other manifest that exists** — inside the same commit. |
 | **No agent attribution** | Three layers, because one bad commit is permanent — it puts a bot in your GitHub contributor list, removable only by rewriting published history. `.claude/settings.json` stops Claude Code adding `Co-Authored-By`, a "Generated with" line or a session link, and arms the hooks at session start; `.githooks/commit-msg` strips them whatever tool wrote them — Cursor, Copilot, or one that does not exist yet; and `.github/workflows/attribution.yml` fails the build if any commit carries them anyway, which is the layer that covers a fresh clone where no hook is installed yet. The rule is **one author per commit**: every `Co-Authored-By` line goes, not only an agent's, because separating the two was tried by name (which deleted a real person whose address contained "amp") and by bot address (a list that must grow with every new agent, where one miss is permanent). Credit collaborators in the commit body. |
 | `scripts/setup.mjs` | One-shot, idempotent, ordered bootstrap (order matters — see below). |
@@ -120,7 +120,7 @@ Deliberately **not** touched, because they are release counters rather than semv
 
 ```bash
 # 1. copy it into a new project with a history of its own (nothing links back here)
-git clone --depth 1 https://github.com/ahnafudin/agent-ready.git my-project
+git clone --depth 1 https://github.com/ahnafudin/agentready.git my-project
 cd my-project
 rm -rf .git && git init
 
@@ -137,12 +137,12 @@ Then open any AI coding tool and type your task — the rules ride along automat
 
 ## Take it in parts
 
-**Only the hooks, in Claude Code** — the read guard, the slop guard and `/agent-ready:anti-slop`,
+**Only the hooks, in Claude Code** — the read guard, the slop guard and `/agentready:anti-slop`,
 in any project, without copying anything:
 
 ```text
-/plugin marketplace add ahnafudin/agent-ready
-/plugin install agent-ready@agent-ready
+/plugin marketplace add ahnafudin/agentready
+/plugin install agentready@agentready
 ```
 
 **Only the comment check, in any repository's CI** — one annotation per long comment on the pull
@@ -150,7 +150,7 @@ request. `paths` is optional; without it every tracked file is checked:
 
 ```yaml
 - uses: actions/checkout@v7
-- uses: ahnafudin/agent-ready/slop@main   # pin a release tag for a stable check
+- uses: ahnafudin/agentready/slop@main   # pin a release tag for a stable check
 ```
 
 ## Commands
@@ -191,24 +191,24 @@ Claude hooks → dolt remote**, because:
 - bd is optional: when it is missing, steps 5–7 are skipped and the rest still completes.
 - The Dolt sync remote lives in the local DB, not in git — it must be added per machine.
 
-## What happens to a copy of agent-ready
+## What happens to a copy of agentready
 
 The first `npm run setup` in a **renamed** project personalises it, once:
 
 | Scaffolding | Becomes |
 |---|---|
-| version `0.2.x` (agent-ready's release history) | `0.1.0` |
+| version `0.2.x` (agentready's release history) | `0.1.0` |
 | this README | a README about your project; this one is kept as `docs/TOOLING.md` |
-| `tooling.gates` (commands that maintain agent-ready) | your framework's gates, from the registry |
+| `tooling.gates` (commands that maintain agentready) | your framework's gates, from the registry |
 | the `test` npm script (the tooling's own suite) | free for your project; the suite stays at `test:tooling` |
 | no beads workspace | initialised with YOUR issue prefix and remote |
-| agent-ready's MIT `LICENSE` | kept as `docs/TOOLING-LICENSE` beside the tooling it covers; the root is yours to license |
-| `CONTRIBUTING.md` (how to contribute to agent-ready) | removed |
-| what serves agent-ready's own repository: code of conduct, security policy, issue and PR templates, README assets, the `verify-stacks` and `release` workflows | removed |
+| agentready's MIT `LICENSE` | kept as `docs/TOOLING-LICENSE` beside the tooling it covers; the root is yours to license |
+| `CONTRIBUTING.md` (how to contribute to agentready) | removed |
+| what serves agentready's own repository: code of conduct, security policy, issue and PR templates, README assets, the `verify-stacks` and `release` workflows | removed |
 
 All of it is keyed off `tooling.pristine` and happens exactly once. Nothing you have written is
 ever replaced. `scripts/tests/derived-project.test.mjs` builds a copy, renames it, bootstraps it and
-runs this whole suite inside it — every one of those rows is a bug agent-ready shipped until a
+runs this whole suite inside it — every one of those rows is a bug agentready shipped until a
 real generated app exposed it.
 
 ## Two machines?
@@ -225,13 +225,13 @@ GEMINI.md  CONVENTIONS.md  .cursor/  .windsurf/  .clinerules/  .junie/  .github/
                        generated pointers — do not hand-edit
 .aider.conf.yml        makes Aider read CONVENTIONS.md, which it loads only when told to
 SETUP.md               fill-in checklist · second-machine checklist
-CONTRIBUTING.md  LICENSE  how to contribute · MIT (both leave a project made from agent-ready)
-CODE_OF_CONDUCT.md  SECURITY.md  community rules · private vulnerability reports (agent-ready only)
+CONTRIBUTING.md  LICENSE  how to contribute · MIT (both leave a project made from agentready)
+CODE_OF_CONDUCT.md  SECURITY.md  community rules · private vulnerability reports (agentready only)
 docs/
   STACK.md             GENERATED per project: framework, core layer, gate commands
   VERIFYING.md         how an entry earns `verified`, and what that has caught
-  TOOLING.md           this README, once a project has been made from agent-ready
-  TOOLING-LICENSE      agent-ready's licence, likewise
+  TOOLING.md           this README, once a project has been made from agentready
+  TOOLING-LICENSE      agentready's licence, likewise
   anti-slop/           rules against AI slop: code · ui · copy · human
   PRD.md  ARCHITECTURE.md  FEATURES.md  TASKS.md  ROADMAP.md  VERSIONING.md
   archive/             STATUS_ARCHIVE.md · TASKS_ARCHIVE.md  (the anti-bloat contract)
@@ -260,22 +260,22 @@ scripts/
 .github/workflows/
   attribution.yml      fails the build if any commit carries AI-agent attribution
   gate.yml             the same `npm run gate`, on Linux, Windows and macOS
-  verify-stacks.yml    scaffolds real projects and verifies registry entries (agent-ready only)
-  release.yml          tags and releases every version main reaches, then the npm CLI (agent-ready only)
-  slop-action.yml      runs the slop Action against this repository (agent-ready only)
-.github/ISSUE_TEMPLATE/  pull_request_template.md  assets/   (agent-ready only)
-.claude-plugin/        this repository as a Claude Code plugin and marketplace (agent-ready only)
-slop/                  the comment check as a GitHub Action (agent-ready only)
-packages/agent-ready/  the npm CLI: `init` and `add` (agent-ready only)
+  verify-stacks.yml    scaffolds real projects and verifies registry entries (agentready only)
+  release.yml          tags and releases every version main reaches, then the npm CLI (agentready only)
+  slop-action.yml      runs the slop Action against this repository (agentready only)
+.github/ISSUE_TEMPLATE/  pull_request_template.md  assets/   (agentready only)
+.claude-plugin/        this repository as a Claude Code plugin and marketplace (agentready only)
+slop/                  the comment check as a GitHub Action (agentready only)
+packages/agentready/   the npm CLI: `init` and `add` (agentready only)
 ```
 
 ## Contributing
 
 Fork, branch, `npm run gate`, pull request. The full guide — and the invariants the test suite
-protects — is [CONTRIBUTING.md](https://github.com/ahnafudin/agent-ready/blob/main/CONTRIBUTING.md).
+protects — is [CONTRIBUTING.md](https://github.com/ahnafudin/agentready/blob/main/CONTRIBUTING.md).
 
 ## License
 
-[MIT](https://github.com/ahnafudin/agent-ready/blob/main/LICENSE) © 2026 ahnafudin. A project
-made from agent-ready keeps that notice in `docs/TOOLING-LICENSE`, beside the tooling it
+[MIT](https://github.com/ahnafudin/agentready/blob/main/LICENSE) © 2026 ahnafudin. A project
+made from agentready keeps that notice in `docs/TOOLING-LICENSE`, beside the tooling it
 covers, and chooses its own licence.

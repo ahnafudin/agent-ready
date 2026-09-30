@@ -1,13 +1,13 @@
 {
-  "name": "agent-ready",
-  "description": "agent-ready's Claude Code hooks, without adopting the whole starter.",
+  "name": "agentready",
+  "description": "agentready's Claude Code hooks, without adopting the whole starter.",
   "owner": {
     "name": "ahnafudin",
     "url": "https://github.com/ahnafudin"
   },
   "plugins": [
     {
-      "name": "agent-ready",
+      "name": "agentready",
       "source": "./",
       "description": "Read guard, slop guard and /anti-slop."
     }

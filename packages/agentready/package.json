@@ -1,10 +1,10 @@
 {
-  "name": "@ahnafudin/agent-ready",
-  "version": "0.15.3",
+  "name": "@ahnafudin/agentready",
+  "version": "0.15.4",
   "description": "Start a repo that AI coding agents follow, or add that tooling to one you have: one AGENTS.md, one gate, anti-slop checks.",
   "type": "module",
   "bin": {
-    "agent-ready": "cli.mjs"
+    "agentready": "cli.mjs"
   },
   "files": [
     "cli.mjs",
@@ -19,13 +19,13 @@
   },
   "license": "MIT",
   "author": "ahnafudin",
-  "homepage": "https://github.com/ahnafudin/agent-ready",
+  "homepage": "https://github.com/ahnafudin/agentready",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ahnafudin/agent-ready.git",
-    "directory": "packages/agent-ready"
+    "url": "git+https://github.com/ahnafudin/agentready.git",
+    "directory": "packages/agentready"
   },
-  "bugs": "https://github.com/ahnafudin/agent-ready/issues",
+  "bugs": "https://github.com/ahnafudin/agentready/issues",
   "keywords": [
     "agents-md",
     "ai-agents",

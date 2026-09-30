@@ -113,7 +113,7 @@ describe("the README's honesty claim", () => {
   it("matches what stacks.json actually says", (t) => {
     // Only meaningful here: `personalize.mjs` replaces this README with the
     // project's own, so a derived copy has no such claim to check.
-    if (!isUnrenamed()) return t.skip("not agent-ready — its README was replaced");
+    if (!isUnrenamed()) return t.skip("not agentready — its README was replaced");
     const stacks = loadRegistry();
     const verified = stacks.filter((s) => s.verified !== false).length;
     const unverified = stacks.length - verified;
@@ -145,7 +145,7 @@ describe("the README's honesty claim", () => {
 
   it("gets the registry's size and shape right too", (t) => {
     // The headline entry count and framework/base split all go stale when one entry is added.
-    if (!isUnrenamed()) return t.skip("not agent-ready — its README was replaced");
+    if (!isUnrenamed()) return t.skip("not agentready — its README was replaced");
     const stacks = loadRegistry();
     const frameworks = stacks.filter((s) => s.tier === "framework").length;
     const readme = readIfExists(at("README.md"));
@@ -159,7 +159,7 @@ ${stacks.length - frameworks} language bases)`) ||
   });
 
   it("does not pin an exact test count, which changes every commit", (t) => {
-    if (!isUnrenamed()) return t.skip("not agent-ready — its README was replaced");
+    if (!isUnrenamed()) return t.skip("not agentready — its README was replaced");
     assert.doesNotMatch(readIfExists(at("README.md")), /runs \*\*\d+ tests\*\*/);
   });
 });
@@ -167,7 +167,7 @@ ${stacks.length - frameworks} language bases)`) ||
 describe("the generated stack brief", () => {
   // docs/STACK.md is generated, committed and read by agents, so it can silently drift from the gates.
   it("is what the generator would write today", (t) => {
-    if (!isUnrenamed()) return t.skip("not agent-ready — a project regenerates its own");
+    if (!isUnrenamed()) return t.skip("not agentready — a project regenerates its own");
     const expected = renderDoc(detectResolved(), pkg.tooling.gates);
     assert.equal(
       readIfExists(at("docs/STACK.md")),

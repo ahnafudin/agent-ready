@@ -29,7 +29,7 @@ These use Claude Code features other agents do not have. Everything else is in `
   shows what the session is doing at a glance.
 - **Memory:** Claude Code's auto-memory does NOT sync between machines. Anything
   cross-machine-critical belongs in `AGENTS.md` or `docs/` — which is the whole point of
-  agent-ready.
+  agentready.
 - **Hooks:** `.claude/settings.json` runs `node scripts/bd-prime.mjs` on SessionStart and
   PreCompact. That wrapper is deliberately silent when `bd` is not installed, so a machine without
   beads does not open every session with an error sitting in context.

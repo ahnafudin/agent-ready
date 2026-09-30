@@ -188,7 +188,7 @@ describe("the gate check and the editor hook", () => {
 
   it("turns each finding into a GitHub annotation when run as the Action", (t) => {
     const action = at("slop", "run.mjs");
-    if (!existsSync(action)) return t.skip("the Action ships with agent-ready itself");
+    if (!existsSync(action)) return t.skip("the Action ships with agentready itself");
     const env = { ...process.env, GITHUB_WORKSPACE: project, INPUT_PATHS: "long.js short.js" };
     const r = spawnSync(process.execPath, [action], { encoding: "utf8", env });
     assert.equal(r.status, 1, r.stderr);

@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { at, git, hooksDirFor, norm, note as write, parseFlags, ROOT, safeDirectoryHint, writeIfChanged } from "./lib/util.mjs";
 
 const HOOK_DIR = at(".githooks");
-/** Present in every hook agent-ready owns, so a foreign one is never clobbered. */
+/** Present in every hook agentready owns, so a foreign one is never clobbered. */
 const MARKER = "tooling:hook";
 /** The marker before the namespace rename; installed copies still carry it until refreshed. */
 const OLD_MARKER = "vibe:hook";
@@ -97,7 +97,7 @@ if (hooksPath === ".githooks") {
   syncInto(hooksDirFor(hooksPath), `beads owns the chain (${hooksPath})`);
 } else if (hooksPath) {
   note(`core.hooksPath is already "${hooksPath}" (another hook manager?) — not overwriting.`);
-  note("to enable agent-ready's hooks manually: git config core.hooksPath .githooks");
+  note("to enable agentready's hooks manually: git config core.hooksPath .githooks");
 } else {
   if (CHECK) {
     // Not installed is not drift: a CI checkout that never ran postinstall must pass the gate.

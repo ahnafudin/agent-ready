@@ -1,7 +1,7 @@
 # Versioning
 
 Semantic versioning (MAJOR.MINOR.PATCH). **`package.json` is the single source of truth** (it exists
-in every copy of agent-ready as the tooling manifest, whatever the app language);
+in every copy of agentready as the tooling manifest, whatever the app language);
 `scripts/version.mjs` propagates it to every optional manifest that exists in the repo.
 
 Writes are targeted regex replacements — never a JSON/TOML reparse and reformat — so a bump touches
