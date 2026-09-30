@@ -1,0 +1,2 @@
+# Aider reads CONVENTIONS.md (generated from AGENTS.md) only when this file names it.
+read: CONVENTIONS.md
