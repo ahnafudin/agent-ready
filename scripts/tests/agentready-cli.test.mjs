@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
 import { pathToFileURL } from "node:url";
-import { at, ROOT } from "../lib/util.mjs";
+import { at, PLACEHOLDER_NAME, ROOT } from "../lib/util.mjs";
 
 const CLI = at("packages", "agentready", "cli.mjs");
 const skip = !existsSync(CLI) && "the CLI ships with agentready itself, not with a project made from it";
@@ -35,6 +35,18 @@ describe("agentready init", { skip }, () => {
     mkdirSync(dir);
     writeFileSync(join(dir, "keep.txt"), "mine");
     assert.throws(() => init(dir, FROM_HERE), /not empty — .*agentready add/);
+  });
+
+  it("refuses the placeholder name, which would make the project pass for agentready itself", async () => {
+    const { init } = await load();
+    const dir = join(tmp, PLACEHOLDER_NAME);
+    assert.throws(() => init(dir, FROM_HERE), /is the name agentready uses for itself/);
+    assert.ok(!existsSync(join(dir, "AGENTS.md")), "the name is checked before anything is fetched");
+  });
+
+  it("keeps its placeholder in step with the tooling it installs", async () => {
+    const { PLACEHOLDER } = await load();
+    assert.equal(PLACEHOLDER, PLACEHOLDER_NAME);
   });
 });
 
@@ -70,6 +82,15 @@ describe("agentready add", { skip }, () => {
     const pkg = readJson(join(dir, "package.json"));
     assert.equal(pkg.name, "go-service");
     assert.ok(pkg.scripts.gate);
+  });
+
+  it("refuses a repo whose package.json carries the placeholder name, before copying anything", async () => {
+    const { add } = await load();
+    const dir = join(tmp, "placeholder-named");
+    mkdirSync(dir);
+    writeFileSync(join(dir, "package.json"), JSON.stringify({ name: PLACEHOLDER_NAME }));
+    await assert.rejects(add(dir, FROM_HERE), /choose another project name/);
+    assert.ok(!existsSync(join(dir, "AGENTS.md")));
   });
 });
 

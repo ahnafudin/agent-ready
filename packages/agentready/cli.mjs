@@ -36,8 +36,16 @@ function fetchStarter(dir, { source = SOURCE, ref = `v${VERSION}` } = {}) {
   return files;
 }
 
+/** The package name agentready gives itself; its scripts treat a project with this name as agentready. */
+export const PLACEHOLDER = "my-project";
+
+const refusePlaceholder = (name) => {
+  if (name === PLACEHOLDER) throw new Error(`"${PLACEHOLDER}" is the name agentready uses for itself — choose another project name`);
+  return name;
+};
+
 /** A directory name as an npm package name. */
-const packageName = (dir) => basename(dir).toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^[._-]+/, "") || "my-project";
+const packageName = (dir) => refusePlaceholder(basename(dir).toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^[._-]+/, "") || "app");
 
 /** Clones agentready into an empty `dir` as a new repository named after the directory. */
 export function init(dir, options = {}) {
@@ -45,18 +53,19 @@ export function init(dir, options = {}) {
   if (existsSync(target) && readdirSync(target).length > 0) {
     throw new Error(`${dir} is not empty — to add the tooling to an existing repo, run: ${RUN} add ${dir}`);
   }
+  const name = packageName(target);
   fetchStarter(target, options);
   git(["init", "--quiet"], target);
   const pkgPath = join(target, "package.json");
   const raw = readFileSync(pkgPath, "utf8");
-  writeFileSync(pkgPath, raw.replace(/"name"\s*:\s*"[^"]*"/, `"name": "${packageName(target)}"`));
+  writeFileSync(pkgPath, raw.replace(/"name"\s*:\s*"[^"]*"/, `"name": "${name}"`));
   return { dir: target };
 }
 
 /** Adds missing npm scripts (never replacing one) or writes a package.json when there is none. */
 function mergePackageJson(path, starter, name) {
   if (!existsSync(path)) {
-    const fresh = { name: packageName(name), private: true, version: "0.1.0", engines: starter.engines, scripts: starter.scripts };
+    const fresh = { name, private: true, version: "0.1.0", engines: starter.engines, scripts: starter.scripts };
     writeFileSync(path, `${JSON.stringify(fresh, null, 2)}\n`);
     return Object.keys(starter.scripts);
   }
@@ -72,6 +81,8 @@ function mergePackageJson(path, starter, name) {
 export async function add(dir = ".", options = {}) {
   const target = resolve(dir);
   if (!existsSync(target)) throw new Error(`${dir} does not exist`);
+  const pkgPath = join(target, "package.json");
+  const name = existsSync(pkgPath) ? refusePlaceholder(JSON.parse(readFileSync(pkgPath, "utf8")).name) : packageName(target);
   const tmp = mkdtempSync(join(tmpdir(), "agentready-"));
   try {
     const files = fetchStarter(tmp, options);
@@ -94,7 +105,7 @@ export async function add(dir = ".", options = {}) {
       added.push(to);
     }
     const starter = JSON.parse(readFileSync(join(tmp, "package.json"), "utf8"));
-    const scripts = mergePackageJson(join(target, "package.json"), starter, target);
+    const scripts = mergePackageJson(pkgPath, starter, name);
     return { added, kept, scripts };
   } finally {
     rmSync(tmp, { recursive: true, force: true });

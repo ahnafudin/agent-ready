@@ -5,8 +5,8 @@ Start a repo that AI coding agents follow, or add that tooling to a repo you alr
 fail the gate.
 
 ```bash
-npx @ahnafudin/agentready init my-project   # a new project, with a history of its own
-npx @ahnafudin/agentready add               # into the repo in the current directory; your files stay
+npx @ahnafudin/agentready init my-app   # a new project, with a history of its own
+npx @ahnafudin/agentready add          # into the repo in the current directory; your files stay
 ```
 
 Then `npm install` and `npm run setup`. `add` copies only what is missing: a file you already have
