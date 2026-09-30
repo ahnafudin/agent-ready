@@ -32,7 +32,9 @@ Then fill the placeholders — search for `TODO:fill`:
 
 - [ ] `AGENTS.md` — project name · Project summary · Stack table · Layer responsibilities ·
       Naming conventions · Conventions · Commands · design-token pointer in the
-      "Avoid AI-slop design" rule
+      "No AI slop" rule
+- [ ] `package.json` → `vibe.slop.ignore` — globs for vendored or generated code the comment check
+      should skip (`npm run slop` lists what it would flag today)
 - [ ] `CLAUDE.md` — project name only (everything else is imported from `AGENTS.md`; **do not copy
       rules here**)
 - [ ] `package.json` — **`name` first, before anything else.** While it is still `my-project`,
