@@ -1,9 +1,9 @@
 // scripts/lib/util.mjs — helpers shared by the repo's scripts.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 /** Repo root (this file lives at <root>/scripts/lib/). */
 export const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), "..", ".."));
@@ -49,11 +49,27 @@ export function runTool(cmd, args = []) {
   return tryRun([quote(cmd), ...args.map(quote)].join(" "), undefined, { shell: true });
 }
 
-/** Normalized path for equality checks: git prints forward slashes on Windows
- *  and drive-letter case can differ between tools. */
+/** Normalized path for equality checks, as git reports paths: symlinks and Windows 8.3 short names
+ *  resolved, forward slashes, and case-folded on Windows. */
 export function norm(p) {
-  const r = resolve(p).split("\\").join("/");
+  let real = resolve(p);
+  try {
+    real = realpathSync.native(real);
+  } catch {
+    // not on disk yet: compare it as written
+  }
+  const r = real.split("\\").join("/");
   return process.platform === "win32" ? r.toLowerCase() : r;
+}
+
+/** True when `moduleUrl` is the script node was started with, including through a symlinked path. */
+export function isMain(moduleUrl) {
+  if (!process.argv[1]) return false;
+  try {
+    return moduleUrl === pathToFileURL(realpathSync(process.argv[1])).href;
+  } catch {
+    return false;
+  }
 }
 
 /**

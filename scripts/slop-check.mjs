@@ -3,9 +3,8 @@
 // `npm run gate` runs it first in every project; `npm run slop [paths…]` runs it alone.
 
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { checkFile, describe, slopConfig, validateCommentRegistry } from "./lib/slop.mjs";
-import { note as write, ROOT, tryRun } from "./lib/util.mjs";
+import { isMain, note as write, ROOT, tryRun } from "./lib/util.mjs";
 
 const note = (msg) => write(msg, "[slop] ");
 
@@ -43,6 +42,6 @@ export function reportSlop(paths = [], root = ROOT) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   process.exit(reportSlop(process.argv.slice(2)));
 }

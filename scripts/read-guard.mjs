@@ -2,7 +2,7 @@
 // scripts/read-guard.mjs — Claude Code PreToolUse hook: denies a Read with no offset/limit of a long text file.
 // offset/limit is the way through, and any failure lets the Read proceed. READ_GUARD_MAX_LINES sets the limit.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -70,6 +70,7 @@ async function main() {
   );
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Standalone on purpose (it is copied as one file), so the symlink-safe main check is inline here.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   await main();
 }

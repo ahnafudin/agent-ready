@@ -3,8 +3,7 @@
 // `npm run gate test` runs one gate; `npm run gate:list` lists them (npm swallows a leading `--list`).
 
 import { spawnSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
-import { at, parseFlags, readJson } from "./lib/util.mjs";
+import { at, isMain, parseFlags, readJson } from "./lib/util.mjs";
 import { reportSlop } from "./slop-check.mjs";
 import { detectResolved, mergeGates } from "./stacks.mjs";
 
@@ -131,6 +130,6 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   process.exit(main(process.argv.slice(2)));
 }

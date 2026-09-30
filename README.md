@@ -238,7 +238,7 @@ scripts/
   commit-msg           strips AI-agent attribution, whichever tool wrote it
 .github/workflows/
   attribution.yml      fails the build if any commit carries AI-agent attribution
-  gate.yml             the same `npm run gate`, on Node 20/22/24
+  gate.yml             the same `npm run gate`, on Linux, Windows and macOS
   verify-stacks.yml    scaffolds real projects and verifies registry entries
 ```
 

@@ -4,8 +4,7 @@
 
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
-import { isUnrenamed, note as write, parseFlags, readJson, ROOT, writeIfChanged } from "./lib/util.mjs";
+import { isMain, isUnrenamed, note as write, parseFlags, readJson, ROOT, writeIfChanged } from "./lib/util.mjs";
 
 /** Marks a README as still being agent-ready's own, and therefore replaceable. */
 export const OWN_README_MARKER = "<!-- tooling:readme -->";
@@ -147,6 +146,6 @@ function main(argv = []) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   process.exit(main(process.argv.slice(2)));
 }

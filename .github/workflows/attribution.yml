@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
 
       # No `npm install`: this check must work in a checkout where nothing has
       # been set up, since that is the situation it exists to cover.

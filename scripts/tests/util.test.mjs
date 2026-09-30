@@ -2,10 +2,12 @@
 // and the dubious-ownership detector stops a misleading "run git init" suggestion.
 
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
+import { pathToFileURL } from "node:url";
 import {
   dubiousOwnership,
   hasShellMetachars,
@@ -15,6 +17,7 @@ import {
   PLACEHOLDER_NAME,
   norm,
   parseFlags,
+  ROOT,
   runTool,
   safeDirectoryHint,
   tryRun,
@@ -86,6 +89,42 @@ describe("dubiousOwnership", () => {
 describe("norm", () => {
   it("normalises separators so path comparisons survive Windows", () => {
     assert.ok(!norm("a/b").includes("\\"));
+  });
+
+  it("sees a symlinked directory as its target, as git does", () => {
+    const base = mkdtempSync(join(tmpdir(), "tooling-norm-"));
+    try {
+      const target = join(base, "real");
+      mkdirSync(target);
+      symlinkSync(target, join(base, "link"), "junction"); // "junction" needs no admin rights on Windows
+      assert.equal(norm(join(base, "link")), norm(target));
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
+  it("expands a Windows 8.3 short name, as git does", (t) => {
+    if (process.platform !== "win32" || !existsSync("C:\\PROGRA~1")) return t.skip("needs a Windows short name");
+    assert.equal(norm("C:\\PROGRA~1"), norm("C:\\Program Files"));
+  });
+});
+
+describe("isMain", () => {
+  it("recognises the script node runs, also through a symlinked path", () => {
+    const base = mkdtempSync(join(tmpdir(), "tooling-main-"));
+    try {
+      const real = join(base, "real");
+      mkdirSync(real);
+      const util = pathToFileURL(join(ROOT, "scripts", "lib", "util.mjs")).href;
+      writeFileSync(join(real, "main.mjs"), `import { isMain } from ${JSON.stringify(util)};\nprocess.stdout.write(String(isMain(import.meta.url)));\n`);
+      symlinkSync(real, join(base, "link"), "junction");
+      for (const dir of [real, join(base, "link")]) {
+        const r = spawnSync(process.execPath, [join(dir, "main.mjs")], { encoding: "utf8" });
+        assert.equal(r.stdout, "true", `${dir}: ${r.stderr}`);
+      }
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
   });
 });
 

@@ -4,10 +4,9 @@
 
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve as resolvePath } from "node:path";
-import { pathToFileURL } from "node:url";
 import { expandGlob, isDir, isFile } from "./lib/glob.mjs";
 import { validate } from "./lib/jsonschema.mjs";
-import { at, isUnrenamed, parseFlags, readJson, ROOT, upsertManagedBlock, writeIfChanged } from "./lib/util.mjs";
+import { at, isMain, isUnrenamed, parseFlags, readJson, ROOT, upsertManagedBlock, writeIfChanged } from "./lib/util.mjs";
 
 const REGISTRY = at("scripts", "stacks.json");
 const MAX_SCAN_BYTES = 1024 * 1024; // never slurp a huge file just to grep it
@@ -425,8 +424,6 @@ function main(argv) {
   }
 }
 
-// Run the CLI only when invoked directly. `pathToFileURL`, since a hand-built `file://` URL
-// parses a Windows drive letter as the host.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   main(process.argv.slice(2));
 }
