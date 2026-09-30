@@ -62,7 +62,6 @@ jobs:
             scaffold: |
               composer create-project symfony/skeleton fixture --no-interaction
               cd fixture && composer require --dev symfony/test-pack --no-interaction
-              ls vendor/bin
 
           # ---- JVM ----
           - id: quarkus
