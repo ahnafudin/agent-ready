@@ -73,7 +73,7 @@ describe("hook and CI check agree", () => {
     const sh = spawnSync("sh", ["--version"], { encoding: "utf8" });
     if (sh.error) return t.skip("no POSIX sh here — the hook cannot be executed");
 
-    const dir = mkdtempSync(join(tmpdir(), "vibe-attr-"));
+    const dir = mkdtempSync(join(tmpdir(), "tooling-attr-"));
     trash.push(dir);
     const file = join(dir, "COMMIT_EDITMSG");
     const message = ["feat: something", "", ...KEPT.slice(1), ...STRIPPED, ""].join("\n");
@@ -101,7 +101,7 @@ describe("hook and CI check agree", () => {
     // and an empty commit message aborts the commit outright.
     const sh = spawnSync("sh", ["--version"], { encoding: "utf8" });
     if (sh.error) return t.skip("no POSIX sh here");
-    const dir = mkdtempSync(join(tmpdir(), "vibe-attr-"));
+    const dir = mkdtempSync(join(tmpdir(), "tooling-attr-"));
     trash.push(dir);
     const file = join(dir, "COMMIT_EDITMSG");
     writeFileSync(file, `${STRIPPED.join("\n")}\n`);

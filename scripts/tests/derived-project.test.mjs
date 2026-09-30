@@ -12,7 +12,7 @@ import { OWN_README_MARKER } from "../personalize.mjs";
 
 // Set when we recurse into the copy, so the copy's own run of this file skips
 // (it would otherwise clone itself forever).
-const INSIDE = process.env.VIBE_DERIVED_TEST === "1";
+const INSIDE = process.env.TOOLING_DERIVED_TEST === "1";
 const PROJECT_NAME = "derived-smoke-test";
 
 let dir = null;
@@ -36,7 +36,7 @@ before(() => {
     setupFailure = `cannot list tracked files (${listed.out})`;
     return;
   }
-  dir = mkdtempSync(join(tmpdir(), "vibe-derived-"));
+  dir = mkdtempSync(join(tmpdir(), "tooling-derived-"));
   for (const rel of listed.out.split(/\r?\n/).filter(Boolean)) {
     const src = at(rel);
     if (!existsSync(src)) continue;
@@ -94,9 +94,9 @@ describe("a project made from agent-ready", { skip: INSIDE && "running inside th
   });
 
   it("runs ITS gates, not agent-ready's maintenance checks", () => {
-    const { vibe } = pkg();
-    assert.ok(!("pristine" in vibe), "the one-shot marker must be consumed");
-    const flat = JSON.stringify(vibe.gates);
+    const { tooling } = pkg();
+    assert.ok(!("pristine" in tooling), "the one-shot marker must be consumed");
+    const flat = JSON.stringify(tooling.gates);
     assert.doesNotMatch(flat, /sync-agents/, "that maintains agent-ready itself");
     assert.doesNotMatch(flat, /stacks\.mjs validate/, "so is that");
   });
@@ -156,7 +156,7 @@ describe("a project made from agent-ready", { skip: INSIDE && "running inside th
     const r = node(
       [join(dir, "scripts", "tests", "run.mjs"), "--test-reporter=tap"],
       dir,
-      { VIBE_DERIVED_TEST: "1" },
+      { TOOLING_DERIVED_TEST: "1" },
     );
     const out = `${r.stdout}\n${r.stderr}`;
     assert.equal(r.status, 0, `the tooling suite must be green in a derived project:\n${out.slice(-2500)}`);

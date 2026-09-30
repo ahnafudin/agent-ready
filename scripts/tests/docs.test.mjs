@@ -99,10 +99,10 @@ describe("documented commands exist", () => {
   });
 
   it("every gate command in the registry defaults is a non-empty string", () => {
-    for (const [key, value] of Object.entries(pkg.vibe.gates)) {
+    for (const [key, value] of Object.entries(pkg.tooling.gates)) {
       for (const cmd of [].concat(value ?? [])) {
-        assert.equal(typeof cmd, "string", `vibe.gates.${key} must hold strings`);
-        assert.ok(cmd.trim().length > 0, `vibe.gates.${key} has an empty command`);
+        assert.equal(typeof cmd, "string", `tooling.gates.${key} must hold strings`);
+        assert.ok(cmd.trim().length > 0, `tooling.gates.${key} has an empty command`);
       }
     }
   });
@@ -168,11 +168,11 @@ describe("the generated stack brief", () => {
   // docs/STACK.md is generated, committed and read by agents, so it can silently drift from the gates.
   it("is what the generator would write today", (t) => {
     if (!isUnrenamed()) return t.skip("not agent-ready — a project regenerates its own");
-    const expected = renderDoc(detectResolved(), pkg.vibe.gates);
+    const expected = renderDoc(detectResolved(), pkg.tooling.gates);
     assert.equal(
       readIfExists(at("docs/STACK.md")),
       expected,
-      "docs/STACK.md has drifted from package.json -> vibe.gates. Run `npm run stack:apply`.",
+      "docs/STACK.md has drifted from package.json -> tooling.gates. Run `npm run stack:apply`.",
     );
   });
 });

@@ -1,7 +1,7 @@
 {
   "name": "my-project",
   "private": true,
-  "version": "0.13.2",
+  "version": "0.13.3",
   "type": "module",
   "description": "TODO:fill — one-line project description",
   "engines": {
@@ -32,7 +32,7 @@
     "version:major": "node scripts/version.mjs major",
     "attribution:check": "node scripts/check-attribution.mjs"
   },
-  "vibe": {
+  "tooling": {
     "stack": "node",
     "pristine": true,
     "gates": {

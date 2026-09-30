@@ -134,9 +134,9 @@ export function globToRegExp(glob) {
 
 const positive = (n, fallback) => (Number.isInteger(n) && n > 0 ? n : fallback);
 
-/** `vibe.slop` from package.json: `{ maxCommentLines, maxDocCommentLines, ignore: RegExp[] }`. */
+/** `tooling.slop` from package.json: `{ maxCommentLines, maxDocCommentLines, ignore: RegExp[] }`. */
 export function slopConfig(pkgPath) {
-  const slop = readJson(pkgPath)?.vibe?.slop ?? {};
+  const slop = readJson(pkgPath)?.tooling?.slop ?? {};
   const max = positive(slop.maxCommentLines, DEFAULT_MAX_COMMENT_LINES);
   return {
     maxCommentLines: max,

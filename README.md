@@ -1,4 +1,4 @@
-<!-- vibe:readme -->
+<!-- tooling:readme -->
 # agent-ready
 
 A project starter that makes a new repo **ready for AI coding agents** — structure and contracts only, no stack
@@ -38,7 +38,7 @@ loads the same contract instead of nothing.
 ## Framework support
 
 `npm run stack:detect` reads the markers in your repo; `npm run stack:apply` writes the answer into
-`package.json` → `vibe.gates`, the `.gitignore` managed block and `docs/STACK.md`.
+`package.json` → `tooling.gates`, the `.gitignore` managed block and `docs/STACK.md`.
 
 | Group | Entries |
 |---|---|
@@ -128,12 +128,12 @@ Then open any AI coding tool and type your task — the rules ride along automat
 |---|---|
 | `npm run setup` | One-shot bootstrap. Idempotent; safe to re-run on any machine. |
 | **`npm run gate`** | **The one command that means "is this green?"** — slop → lint → typecheck → test → build, stopping at the first failure. |
-| `npm run slop` | The comment check alone (`vibe.slop` in `package.json` sets the limit and ignored paths). |
+| `npm run slop` | The comment check alone (`tooling.slop` in `package.json` sets the limit and ignored paths). |
 | `npm run gate test` | A single stage. |
 | `npm run gate:list` | What `gate` would run, without running it. |
 | `npm run stack:detect` | Which framework matched, its bases, and the full ranking. |
 | `npm run stack:list` | All 70 registry entries. |
-| `npm run stack:apply` | Refresh `docs/STACK.md`, `vibe.gates` and the `.gitignore` block. |
+| `npm run stack:apply` | Refresh `docs/STACK.md`, `tooling.gates` and the `.gitignore` block. |
 | `npm run stack:reapply` | Same, but overwrite hand-tuned gates from the registry. |
 | `npm run stack:validate` | Check `scripts/stacks.json` against its schema. |
 | `npm run agents:sync` | Regenerate the per-tool pointer files from `AGENTS.md`. |
@@ -153,7 +153,7 @@ Claude hooks → dolt remote**, because:
 
 - `bd init` moves `core.hooksPath` to `.beads/hooks` and **chains whatever hook is already
   installed** — install the version hook first or it gets orphaned.
-- Personalising comes before stack detection: it keys off `vibe.pristine`, which the
+- Personalising comes before stack detection: it keys off `tooling.pristine`, which the
   detection step then clears.
 - `bd init` **auto-commits everything staged** — the script refuses to run it on a dirty index, and
   every step before it writes only *unstaged* changes, so nothing can be swept in.
@@ -168,13 +168,13 @@ The first `npm run setup` in a **renamed** project personalises it, once:
 |---|---|
 | version `0.2.x` (agent-ready's release history) | `0.1.0` |
 | this README | a README about your project; this one is kept as `docs/TOOLING.md` |
-| `vibe.gates` (commands that maintain agent-ready) | your framework's gates, from the registry |
+| `tooling.gates` (commands that maintain agent-ready) | your framework's gates, from the registry |
 | the `test` npm script (the tooling's own suite) | free for your project; the suite stays at `test:tooling` |
 | no beads workspace | initialised with YOUR issue prefix and remote |
 | agent-ready's MIT `LICENSE` | kept as `docs/TOOLING-LICENSE` beside the tooling it covers; the root is yours to license |
 | `CONTRIBUTING.md` (how to contribute to agent-ready) | removed |
 
-All of it is keyed off `vibe.pristine` and happens exactly once. Nothing you have written is
+All of it is keyed off `tooling.pristine` and happens exactly once. Nothing you have written is
 ever replaced. `scripts/tests/derived-project.test.mjs` builds a copy, renames it, bootstraps it and
 runs this whole suite inside it — every one of those rows is a bug agent-ready shipped until a
 real generated app exposed it.

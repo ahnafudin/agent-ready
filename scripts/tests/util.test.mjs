@@ -26,7 +26,7 @@ describe("upsertManagedBlock", () => {
   it("appends a block to a file that has none", () => {
     const out = upsertManagedBlock("keep me\n", "stack-ignores", "dist/\n.next/");
     assert.match(out, /^keep me\n/);
-    assert.match(out, /# >>> vibe:stack-ignores\ndist\/\n\.next\/\n# <<< vibe:stack-ignores\n$/);
+    assert.match(out, /# >>> tooling:stack-ignores\ndist\/\n\.next\/\n# <<< tooling:stack-ignores\n$/);
   });
 
   it("replaces only the block body and preserves text on both sides", () => {
@@ -37,7 +37,7 @@ describe("upsertManagedBlock", () => {
     assert.match(second, /below/);
     assert.match(second, /new\//);
     assert.doesNotMatch(second, /old\//);
-    assert.equal(second.match(/>>> vibe:stack-ignores/g).length, 1, "must not duplicate the block");
+    assert.equal(second.match(/>>> tooling:stack-ignores/g).length, 1, "must not duplicate the block");
   });
 
   it("is idempotent", () => {
@@ -49,12 +49,12 @@ describe("upsertManagedBlock", () => {
     let out = upsertManagedBlock("", "a", "1");
     out = upsertManagedBlock(out, "b", "2");
     out = upsertManagedBlock(out, "a", "3");
-    assert.match(out, /# >>> vibe:a\n3\n# <<< vibe:a/);
-    assert.match(out, /# >>> vibe:b\n2\n# <<< vibe:b/);
+    assert.match(out, /# >>> tooling:a\n3\n# <<< tooling:a/);
+    assert.match(out, /# >>> tooling:b\n2\n# <<< tooling:b/);
   });
 
   it("honours a different comment marker", () => {
-    assert.match(upsertManagedBlock("", "x", "y", "//"), /\/\/ >>> vibe:x/);
+    assert.match(upsertManagedBlock("", "x", "y", "//"), /\/\/ >>> tooling:x/);
   });
 });
 
@@ -197,7 +197,7 @@ describe("isUnrenamed", () => {
   const dirs = [];
   after(() => dirs.forEach((d) => rmSync(d, { recursive: true, force: true })));
   const withName = (name) => {
-    const dir = mkdtempSync(join(tmpdir(), "vibe-name-"));
+    const dir = mkdtempSync(join(tmpdir(), "tooling-name-"));
     dirs.push(dir);
     if (name !== null) writeFileSync(join(dir, "package.json"), JSON.stringify({ name, version: "0.1.0" }));
     return dir;

@@ -60,7 +60,7 @@ relay(tryRun(process.execPath, [at("scripts", "install-hooks.mjs")]));
 step("2/7 personalise this copy");
 relay(tryRun(process.execPath, [at("scripts", "personalize.mjs")]));
 
-// 3. stack detection → vibe.gates + .gitignore block + docs/STACK.md
+// 3. stack detection → tooling.gates + .gitignore block + docs/STACK.md
 step("3/7 framework detection");
 relay(tryRun(process.execPath, [at("scripts", "stacks.mjs"), "apply"]));
 note("re-run any time with `npm run stack:apply` (`npm run stack:reapply` overwrites hand-tuned gates).");

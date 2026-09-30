@@ -281,7 +281,7 @@ describe("planner: mix.exs / Chart.yaml / Ruby / WordPress / VERSION", () => {
 });
 
 describe("glob expansion", () => {
-  const dir = mkdtempSync(join(tmpdir(), "vibe-glob-"));
+  const dir = mkdtempSync(join(tmpdir(), "tooling-glob-"));
   after(() => rmSync(dir, { recursive: true, force: true }));
 
   it("matches a wildcard in a MIDDLE segment (src/*/*.csproj)", () => {
@@ -301,7 +301,7 @@ describe("glob expansion", () => {
 });
 
 describe("Cargo.lock planner (reads its sibling Cargo.toml)", () => {
-  const dir = mkdtempSync(join(tmpdir(), "vibe-cargo-"));
+  const dir = mkdtempSync(join(tmpdir(), "tooling-cargo-"));
   after(() => rmSync(dir, { recursive: true, force: true }));
 
   it("rewrites only the crate's own lock entry", () => {

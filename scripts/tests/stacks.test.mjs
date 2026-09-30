@@ -13,7 +13,7 @@ const stacks = loadRegistry();
 
 /** Build a throwaway repo from `{ "relative/path": "contents" }`. */
 function fixture(files) {
-  const dir = mkdtempSync(join(tmpdir(), "vibe-stack-"));
+  const dir = mkdtempSync(join(tmpdir(), "tooling-stack-"));
   for (const [path, body] of Object.entries(files)) {
     const full = join(dir, path);
     mkdirSync(dirname(full), { recursive: true });
@@ -319,9 +319,9 @@ describe("apply(): agent-ready's own gates must not survive into a project", () 
     build: null,
   };
 
-  const project = (name, vibe) => {
+  const project = (name, tooling) => {
     const dir = repo({
-      "package.json": pkg({ name, version: "0.1.0", devDependencies: { electron: "^32.0.0" }, vibe }),
+      "package.json": pkg({ name, version: "0.1.0", devDependencies: { electron: "^32.0.0" }, tooling }),
       "docs/.keep": "",
     });
     return dir;
@@ -331,7 +331,7 @@ describe("apply(): agent-ready's own gates must not survive into a project", () 
     const dir = project("my-electron-app", { stack: "node", pristine: true, gates: OWN_GATES });
     const result = apply({ root: dir });
     assert.equal(result.primary.id, "electron");
-    const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).vibe;
+    const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).tooling;
     assert.equal(after.stack, "electron");
     assert.equal(after.gates.build, "npm run build", "the Electron build gate must be wired in");
     assert.ok(!("pristine" in after), "the marker is one-shot and must be dropped");
@@ -341,7 +341,7 @@ describe("apply(): agent-ready's own gates must not survive into a project", () 
   it("keeps them in agent-ready itself, which is still unrenamed", () => {
     const dir = project("my-project", { stack: "node", pristine: true, gates: OWN_GATES });
     apply({ root: dir });
-    const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).vibe;
+    const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).tooling;
     assert.deepEqual(after.gates, OWN_GATES, "agent-ready maintains itself with these");
     assert.equal(after.pristine, true);
   });
@@ -350,7 +350,7 @@ describe("apply(): agent-ready's own gates must not survive into a project", () 
     const mine = { lint: "eslint .", test: "vitest run" };
     const dir = project("my-electron-app", { stack: "electron", gates: mine });
     apply({ root: dir });
-    const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).vibe;
+    const after = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).tooling;
     assert.deepEqual(after.gates, mine, "no pristine marker => hand-tuned => untouched");
   });
 
@@ -386,7 +386,7 @@ describe("apply() aimed at another project", () => {
     assert.equal(r.status, 0, r.stderr);
 
     const target = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
-    assert.equal(target.vibe.stack, "express", "the named project must be the one configured");
+    assert.equal(target.tooling.stack, "express", "the named project must be the one configured");
     assert.equal(readFileSync(OWN_STACK_DOC, "utf8"), before, "agent-ready must not have been touched");
   });
 

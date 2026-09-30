@@ -15,7 +15,7 @@ after(() => trash.forEach((d) => rmSync(d, { recursive: true, force: true })));
 
 /** Run the hook over a message and return what it left behind. */
 function run(message) {
-  const dir = mkdtempSync(join(tmpdir(), "vibe-msg-"));
+  const dir = mkdtempSync(join(tmpdir(), "tooling-msg-"));
   trash.push(dir);
   const file = join(dir, "COMMIT_EDITMSG");
   writeFileSync(file, message);

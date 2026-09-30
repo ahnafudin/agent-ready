@@ -1,12 +1,12 @@
 #!/bin/sh
-# vibe:hook — owned by scripts/install-hooks.mjs; edit .githooks/, never a copy.
+# tooling:hook — owned by scripts/install-hooks.mjs; edit .githooks/, never a copy.
 # Strip AI-agent attribution (co-author, session and "Generated with" lines) from every commit message.
 # Fail-soft: any problem leaves the message untouched.
 
 MSG="$1"
 [ -n "$MSG" ] && [ -f "$MSG" ] || exit 0
 
-TMP="$MSG.vibe-attr"
+TMP="$MSG.tooling-attr"
 
 # One author per commit: EVERY Co-authored-by line goes, so no bot list can fall behind or match a person.
 # Credit a human collaborator in the commit body instead.

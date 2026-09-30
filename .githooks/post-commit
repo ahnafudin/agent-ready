@@ -1,10 +1,10 @@
 #!/bin/sh
-# vibe:hook — owned by scripts/install-hooks.mjs; edit .githooks/, never a copy.
+# tooling:hook — owned by scripts/install-hooks.mjs; edit .githooks/, never a copy.
 # Fold the semver bump the new commit's conventional type implies into that commit (amend).
 # Only post-commit can: a bump staged in an earlier hook lands one commit late. Fail-soft throughout.
 
 # The amend below re-fires this hook.
-[ -n "$VIBE_VERSION_AMEND" ] && exit 0
+[ -n "$TOOLING_VERSION_AMEND" ] && exit 0
 command -v node >/dev/null 2>&1 || exit 0
 [ -f scripts/version.mjs ] || exit 0
 
@@ -43,5 +43,5 @@ for f in $MANIFESTS; do
 done
 IFS=$OLDIFS
 
-VIBE_VERSION_AMEND=1 git commit --amend --no-edit --no-verify -q >/dev/null 2>&1
+TOOLING_VERSION_AMEND=1 git commit --amend --no-edit --no-verify -q >/dev/null 2>&1
 exit 0

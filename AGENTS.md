@@ -78,7 +78,7 @@ npm run slop            # the comment check alone
 ```
 
 `slop` is built in and always runs first; its limit and ignored paths live in `package.json` →
-`vibe.slop`. The other commands live in `package.json` → `vibe.gates` and are filled in from the framework
+`tooling.slop`. The other commands live in `package.json` → `tooling.gates` and are filled in from the framework
 registry by `npm run stack:apply`. **This indirection is the point:** every agent, in every
 language, only has to know `npm run gate`. If a gate command is wrong, fix it in `package.json` —
 do not work around it, and do not invent your own build command.
@@ -140,7 +140,7 @@ npm run setup          # one-shot bootstrap (see SETUP.md)
 npm run gate           # all quality gates — the one command that means "is this green?"
 npm run gate:list      # what `gate` would run, without running it
 npm run stack:detect   # which framework the registry matched, and how strongly
-npm run stack:apply    # refresh docs/STACK.md + vibe.gates + the .gitignore block
+npm run stack:apply    # refresh docs/STACK.md + tooling.gates + the .gitignore block
 npm run agents:sync    # regenerate the per-tool pointer files from THIS file
 npm run version:get    # current semver
 # TODO:fill — dev / run commands specific to this project
