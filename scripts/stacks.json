@@ -408,7 +408,7 @@
       },
       "gates": {
         "lint": "mix format --check-formatted",
-        "typecheck": "mix dialyzer",
+        "typecheck": null,
         "test": "mix test",
         "build": "mix compile --warnings-as-errors"
       },
@@ -421,7 +421,8 @@
       ],
       "coreLayer": "context modules - not controllers or LiveViews",
       "conventions": [
-        "One context per domain; the web layer never calls Repo directly"
+        "One context per domain; the web layer never calls Repo directly",
+        "`mix dialyzer` comes from the dialyxir dependency, which neither `mix new` nor `mix phx.new` adds — on a fresh project it fails with 'The task \"dialyzer\" could not be found', so it is not a default gate here; add it to `tooling.gates` once dialyxir is in mix.exs"
       ],
       "versionTargets": [
         "mix.exs"
