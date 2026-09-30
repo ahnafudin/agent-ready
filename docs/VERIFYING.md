@@ -65,6 +65,7 @@ real thing:
 | `gradle` | the typecheck gate named `compileKotlin`, which a Java-only build does not have, so `gradle init`'s Java application failed it |
 | `laravel` | the typecheck gate was PHPStan, which laravel/laravel does not install: exit 127 on every new project |
 | `elixir` | the typecheck gate was `mix dialyzer`, a task from the dialyxir dependency that neither `mix new` nor `mix phx.new` adds |
+| `symfony` | the lint and typecheck gates were PHP CS Fixer and PHPStan, which neither symfony/skeleton nor Symfony's test-pack installs: exit 127 |
 
 Five of those share one cause, and it is now a rule: **a framework built on
 another must carry more detection signals than the one it is built on**, because
@@ -74,10 +75,10 @@ inheritance: infrastructure entries now carry a negative weight, because a
 compose file, a chart or some `.tf` usually sits ALONGSIDE an application rather
 than being the project.
 
-Three more share another: **a tool the project's own creator does not install is
-not a default gate.** `swiftlint`, PHPStan in Laravel and dialyzer in Elixir each
-turned every new project's gate red, so each is now a convention telling you to
-add it to `tooling.gates` once installed.
+Four more share another: **a tool the project's own creator does not install is
+not a default gate.** `swiftlint`, PHPStan in Laravel, PHP CS Fixer and PHPStan in
+Symfony, and dialyzer in Elixir each turned every new project's gate red, so each
+is now a convention telling you to add it to `tooling.gates` once installed.
 
 A separate lesson runs through the gate failures: **a green test gate means
 different things in different languages.** `pytest`, `bun test` and `swift test`
@@ -117,7 +118,7 @@ of which these entries promise.
 
 ## When the creator leaves the gate's tool out
 
-Three creators produce a project without the tool its gate runs, although the
+Four creators produce a project without the tool its gate runs, although the
 framework's docs name the one-line setup. The fixture runs that documented step,
 so the job checks the gate, not the setup:
 
@@ -126,6 +127,7 @@ so the job checks the gate, not the setup:
 | `angular` | `ng lint`: "Cannot find "lint" target" | `ng add angular-eslint` |
 | `nuxt` | `nuxi typecheck` exits 1, asking for a type checker | `npm install -D vue-tsc typescript@6` |
 | `astro` | `astro check` logs an error and **exits 0**, having checked nothing | `npm install -D @astrojs/check typescript@6` |
+| `symfony` | no phpunit, so no `bin/phpunit` to run | `composer require --dev symfony/test-pack` |
 
 `astro` is the dangerous one: a gate that passes without checking is the shape
 "The verifier itself" warns about. TypeScript stays at 6 for both, because vue-tsc
@@ -155,7 +157,6 @@ These entries are marked verified but are not re-run here:
 | `docker-compose` | its creator, `docker init`, ships with Docker Desktop, not the runner's Docker Engine |
 | `flask` | no project creator; the tutorial's project is written by hand |
 | `python`, `php`, `ruby` | language bases; their gates run under the frameworks built on them (django, fastapi and streamlit; codeigniter4 and slim; sinatra and rails) |
-| `symfony` | symfony/skeleton installs none of its three gate tools (php-cs-fixer, PHPStan, phpunit) |
 | `electron` | the official creator (Electron Forge) writes no `build` script, and the entry's build gate requires one |
 | `leptos` | `cargo leptos new` refuses to run without a terminal |
 | `wails` | needs the wails CLI and WebKitGTK 4.0, which Ubuntu 24.04 no longer ships |
