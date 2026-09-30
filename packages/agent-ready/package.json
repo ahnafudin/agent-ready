@@ -1,6 +1,6 @@
 {
-  "name": "agent-ready",
-  "version": "0.15.2",
+  "name": "@ahnafudin/agent-ready",
+  "version": "0.15.3",
   "description": "Start a repo that AI coding agents follow, or add that tooling to one you have: one AGENTS.md, one gate, anti-slop checks.",
   "type": "module",
   "bin": {
@@ -13,6 +13,9 @@
   ],
   "engines": {
     "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT",
   "author": "ahnafudin",
