@@ -1,0 +1,30 @@
+name: Framework
+description: Add a framework to the stack registry, or fix a wrong detection or gate command.
+labels: [registry]
+body:
+  - type: input
+    id: framework
+    attributes:
+      label: Framework
+      placeholder: SolidStart
+    validations:
+      required: true
+  - type: textarea
+    id: scaffold
+    attributes:
+      label: Official scaffolder
+      description: The command the framework's own docs give to create a project, and a link to that page.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: gates
+    attributes:
+      label: Gate commands
+      description: The lint, typecheck, test and build commands a freshly scaffolded project runs, as its docs give them.
+      render: shell
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong today
+      description: For a fix, the output of `npm run stack:detect` or the gate that failed.

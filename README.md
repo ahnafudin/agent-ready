@@ -1,12 +1,21 @@
 <!-- tooling:readme -->
 # agent-ready
 
+**One set of rules every AI coding agent follows, one command that says the work is done, and a gate that
+turns AI slop red.**
+
+[![gate](https://github.com/ahnafudin/agent-ready/actions/workflows/gate.yml/badge.svg)](https://github.com/ahnafudin/agent-ready/actions/workflows/gate.yml)
+[![release](https://img.shields.io/github/v/release/ahnafudin/agent-ready)](https://github.com/ahnafudin/agent-ready/releases)
+[![license](https://img.shields.io/github/license/ahnafudin/agent-ready)](https://github.com/ahnafudin/agent-ready/blob/main/LICENSE)
+
+![A four-line comment fails npm run slop; cut to one line, it passes.](https://raw.githubusercontent.com/ahnafudin/agent-ready/main/.github/assets/demo.svg)
+
 A project starter that makes a new repo **ready for AI coding agents** — structure and contracts only, no stack
 lock-in. Copy it, fill the placeholders, and every coding session starts with the right rules, the
 right docs, a working issue tracker and one command that means "is this green?" — **whichever AI
 tool and whichever framework you use.** You type only the task.
 
-## The two problems it solves
+## The three problems it solves
 
 **1. Every AI tool looks for a different file.** Rules written for one agent are invisible to the
 next. Here `AGENTS.md` is canonical, and `npm run agents:sync` generates a pointer for every other
@@ -16,6 +25,10 @@ loads the same contract instead of nothing.
 **2. "Run the tests" means something different in every framework.** Here it is always
 `npm run gate`. What that expands to comes from a **70-entry framework registry** (55 frameworks,
 15 language bases) that detects your stack and writes the real commands into `package.json`.
+
+**3. Agents write slop that nobody asked for.** Narrative comments, filler copy, generic screens.
+Here the rules live in `docs/anti-slop/`, and the one a machine can check runs first in every
+`npm run gate`: a comment over three lines fails it, in any of 76 languages.
 
 ## What you get
 
@@ -173,6 +186,7 @@ The first `npm run setup` in a **renamed** project personalises it, once:
 | no beads workspace | initialised with YOUR issue prefix and remote |
 | agent-ready's MIT `LICENSE` | kept as `docs/TOOLING-LICENSE` beside the tooling it covers; the root is yours to license |
 | `CONTRIBUTING.md` (how to contribute to agent-ready) | removed |
+| what serves agent-ready's own repository: code of conduct, security policy, issue and PR templates, README assets, the `verify-stacks` and `release` workflows | removed |
 
 All of it is keyed off `tooling.pristine` and happens exactly once. Nothing you have written is
 ever replaced. `scripts/tests/derived-project.test.mjs` builds a copy, renames it, bootstraps it and
@@ -193,6 +207,7 @@ GEMINI.md  CONVENTIONS.md  .cursor/  .windsurf/  .clinerules/  .junie/  .github/
                        generated pointers — do not hand-edit
 SETUP.md               fill-in checklist · second-machine checklist
 CONTRIBUTING.md  LICENSE  how to contribute · MIT (both leave a project made from agent-ready)
+CODE_OF_CONDUCT.md  SECURITY.md  community rules · private vulnerability reports (agent-ready only)
 docs/
   STACK.md             GENERATED per project: framework, core layer, gate commands
   VERIFYING.md         how an entry earns `verified`, and what that has caught
@@ -226,7 +241,9 @@ scripts/
 .github/workflows/
   attribution.yml      fails the build if any commit carries AI-agent attribution
   gate.yml             the same `npm run gate`, on Linux, Windows and macOS
-  verify-stacks.yml    scaffolds real projects and verifies registry entries
+  verify-stacks.yml    scaffolds real projects and verifies registry entries (agent-ready only)
+  release.yml          tags and releases every version main reaches (agent-ready only)
+.github/ISSUE_TEMPLATE/  pull_request_template.md  assets/   (agent-ready only)
 ```
 
 ## Contributing

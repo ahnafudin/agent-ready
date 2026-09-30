@@ -1,0 +1,30 @@
+name: Language
+description: Add a language to the comment check, or fix how it reads one.
+labels: [comments]
+body:
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: Gleam
+    validations:
+      required: true
+  - type: input
+    id: files
+    attributes:
+      label: File extensions or names
+      placeholder: .gleam
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Official comment syntax
+      description: A link to the language's own reference or specification that defines its comments.
+    validations:
+      required: true
+  - type: textarea
+    id: lookalikes
+    attributes:
+      label: Code that looks like a comment
+      description: Anything that starts like a comment but is code (attributes, pragmas, directives).
