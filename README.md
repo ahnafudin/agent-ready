@@ -223,6 +223,7 @@ AGENTS.md              CANONICAL rules — edit here, then `npm run agents:sync`
 CLAUDE.md              @AGENTS.md import + Claude-Code-only extras
 GEMINI.md  CONVENTIONS.md  .cursor/  .windsurf/  .clinerules/  .junie/  .github/copilot-instructions.md
                        generated pointers — do not hand-edit
+.aider.conf.yml        makes Aider read CONVENTIONS.md, which it loads only when told to
 SETUP.md               fill-in checklist · second-machine checklist
 CONTRIBUTING.md  LICENSE  how to contribute · MIT (both leave a project made from agent-ready)
 CODE_OF_CONDUCT.md  SECURITY.md  community rules · private vulnerability reports (agent-ready only)
