@@ -1,0 +1,34 @@
+{
+  "name": "agent-ready",
+  "version": "0.15.0",
+  "displayName": "agent-ready",
+  "description": "Denies unbounded reads of long files, flags a comment over three lines right after an edit, and reviews a diff against the anti-slop rules.",
+  "author": {
+    "name": "ahnafudin",
+    "url": "https://github.com/ahnafudin"
+  },
+  "homepage": "https://github.com/ahnafudin/agent-ready",
+  "repository": "https://github.com/ahnafudin/agent-ready",
+  "license": "MIT",
+  "keywords": ["anti-slop", "context", "hooks", "code-quality"],
+  "commands": {
+    "anti-slop": {
+      "source": "./.claude/commands/anti-slop.md",
+      "description": "Review the current changes against the anti-slop rules"
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/read-guard.mjs"], "timeout": 10 }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/slop-guard.mjs"], "timeout": 10 }]
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+name: agent-ready slop check
+description: Fails when a tracked file has a comment block over the anti-slop limit, in 76 languages.
+author: ahnafudin
+branding:
+  icon: check-square
+  color: green
+inputs:
+  paths:
+    description: Space-separated files to check. Empty checks every tracked file.
+    required: false
+    default: ""
+runs:
+  using: node24
+  main: run.mjs
