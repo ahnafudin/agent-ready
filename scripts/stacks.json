@@ -986,6 +986,15 @@
           },
           {
             "file": "remix.config.*"
+          },
+          {
+            "dep": "@react-router/dev"
+          },
+          {
+            "dep": "@remix-run/dev"
+          },
+          {
+            "file": "app/root.*"
           }
         ]
       },
@@ -999,7 +1008,8 @@
       ],
       "coreLayer": "`loader`/`action` in the route module - components just render the result",
       "conventions": [
-        "Progressive enhancement: forms must still work with JS disabled"
+        "Progressive enhancement: forms must still work with JS disabled",
+        "A React Router 7 or Remix app is also a React + Vite app; the framework's dev toolchain and `app/root` outrank react-vite's two signals, and react-vite stays a secondary"
       ],
       "versionTargets": [
         "package.json"
