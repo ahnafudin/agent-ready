@@ -186,6 +186,7 @@ The first `npm run setup` in a **renamed** project personalises it, once:
 | no beads workspace | initialised with YOUR issue prefix and remote |
 | agent-ready's MIT `LICENSE` | kept as `docs/TOOLING-LICENSE` beside the tooling it covers; the root is yours to license |
 | `CONTRIBUTING.md` (how to contribute to agent-ready) | removed |
+| what serves agent-ready's own repository: code of conduct, security policy, issue and PR templates, README assets, the `verify-stacks` and `release` workflows | removed |
 
 All of it is keyed off `tooling.pristine` and happens exactly once. Nothing you have written is
 ever replaced. `scripts/tests/derived-project.test.mjs` builds a copy, renames it, bootstraps it and
@@ -206,6 +207,7 @@ GEMINI.md  CONVENTIONS.md  .cursor/  .windsurf/  .clinerules/  .junie/  .github/
                        generated pointers — do not hand-edit
 SETUP.md               fill-in checklist · second-machine checklist
 CONTRIBUTING.md  LICENSE  how to contribute · MIT (both leave a project made from agent-ready)
+CODE_OF_CONDUCT.md  SECURITY.md  community rules · private vulnerability reports (agent-ready only)
 docs/
   STACK.md             GENERATED per project: framework, core layer, gate commands
   VERIFYING.md         how an entry earns `verified`, and what that has caught
@@ -239,7 +241,9 @@ scripts/
 .github/workflows/
   attribution.yml      fails the build if any commit carries AI-agent attribution
   gate.yml             the same `npm run gate`, on Linux, Windows and macOS
-  verify-stacks.yml    scaffolds real projects and verifies registry entries
+  verify-stacks.yml    scaffolds real projects and verifies registry entries (agent-ready only)
+  release.yml          tags and releases every version main reaches (agent-ready only)
+.github/ISSUE_TEMPLATE/  pull_request_template.md  assets/   (agent-ready only)
 ```
 
 ## Contributing
