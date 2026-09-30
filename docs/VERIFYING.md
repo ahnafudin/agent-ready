@@ -87,8 +87,8 @@ to rediscover it per project.
 
 ## Verify what the entry actually claims
 
-Four entries do not have every gate run here, and each is scoped to the part
-that is genuinely its own — not waved through, and not left unknown.
+Four entries do not have every gate run here. Each is scoped deliberately, with
+the reason on record — not waved through, and not left unknown.
 
 | Entry | Scoped to | Why the rest is not run here |
 |---|---|---|
