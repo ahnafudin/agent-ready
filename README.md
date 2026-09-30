@@ -1,7 +1,7 @@
 <!-- vibe:template-readme -->
-# vibe-template
+# agent-ready
 
-A project boilerplate for **AI-assisted ("vibe") coding** — structure and contracts only, no stack
+A project starter that makes a new repo **ready for AI coding agents** — structure and contracts only, no stack
 lock-in. Copy it, fill the placeholders, and every coding session starts with the right rules, the
 right docs, a working issue tracker and one command that means "is this green?" — **whichever AI
 tool and whichever framework you use.** You type only the task.
@@ -106,7 +106,7 @@ Deliberately **not** touched, because they are release counters rather than semv
 
 ```bash
 # 1. copy the template (GitHub: "Use this template", or)
-gh repo create my-project --template <owner>/vibe-template --private --clone
+gh repo create my-project --template <owner>/agent-ready --private --clone
 cd my-project
 
 # 2. bootstrap (safe to re-run any time)

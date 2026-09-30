@@ -90,10 +90,10 @@ describe("a project made from this template", { skip: INSIDE && "running inside 
 
   it("gets a README about ITSELF, with the template's kept as tooling docs", () => {
     const readme = read("README.md");
-    assert.doesNotMatch(readme, /vibe-template/, "the project README must not describe the template");
+    assert.doesNotMatch(readme, /agent-ready/, "the project README must not describe the template");
     assert.ok(!readme.includes(TEMPLATE_README_MARKER));
     assert.match(readme, new RegExp(`^# ${PROJECT_NAME}`, "m"));
-    assert.match(read("docs/TEMPLATE.md"), /vibe-template/, "the template's own README is still available");
+    assert.match(read("docs/TEMPLATE.md"), /agent-ready/, "the template's own README is still available");
   });
 
   it("runs ITS gates, not the template's maintenance checks", () => {
