@@ -9,11 +9,13 @@ import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SOURCE = "https://github.com/ahnafudin/agent-ready.git";
-const VERSION = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;
+const PKG = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+const VERSION = PKG.version;
+const RUN = `npx ${PKG.name}`;
 
 const USAGE = `usage:
-  agent-ready init <dir>   start a new project in <dir>
-  agent-ready add [dir]    add the tooling to an existing repo (default: the current directory)
+  ${RUN} init <dir>   start a new project in <dir>
+  ${RUN} add [dir]    add the tooling to an existing repo (default: the current directory)
 
 options:
   --source <git url or path>   where to fetch agent-ready from (default: ${SOURCE})
@@ -41,7 +43,7 @@ const packageName = (dir) => basename(dir).toLowerCase().replace(/[^a-z0-9._-]+/
 export function init(dir, options = {}) {
   const target = resolve(dir);
   if (existsSync(target) && readdirSync(target).length > 0) {
-    throw new Error(`${dir} is not empty — to add the tooling to an existing repo, run: agent-ready add ${dir}`);
+    throw new Error(`${dir} is not empty — to add the tooling to an existing repo, run: ${RUN} add ${dir}`);
   }
   fetchStarter(target, options);
   git(["init", "--quiet"], target);

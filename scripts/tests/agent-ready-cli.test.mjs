@@ -79,4 +79,10 @@ describe("the agent-ready command", { skip }, () => {
     assert.equal(r.status, 2);
     assert.match(r.stderr, /unknown flag: --forse/);
   });
+
+  it("tells people to run it by the name it is published under", () => {
+    const { name } = readJson(at("packages", "agent-ready", "package.json"));
+    const r = spawnSync(process.execPath, [CLI], { encoding: "utf8" });
+    assert.ok(r.stdout.includes(`npx ${name} init <dir>`), r.stdout);
+  });
 });

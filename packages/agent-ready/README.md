@@ -1,12 +1,12 @@
 # agent-ready
 
 Start a repo that AI coding agents follow, or add that tooling to a repo you already have: one
-`AGENTS.md` every agent reads, one `npm run gate` in any of 70 frameworks, and anti-slop checks that
+`AGENTS.md` every agent reads, one `npm run gate` for any of 70 stacks, and anti-slop checks that
 fail the gate.
 
 ```bash
-npx agent-ready init my-project   # a new project, with a history of its own
-npx agent-ready add               # into the repo in the current directory; your files stay
+npx @ahnafudin/agent-ready init my-project   # a new project, with a history of its own
+npx @ahnafudin/agent-ready add               # into the repo in the current directory; your files stay
 ```
 
 Then `npm install` and `npm run setup`. `add` copies only what is missing: a file you already have
