@@ -138,8 +138,12 @@ jobs:
           - id: nextjs
             scaffold: npx create-next-app@latest fixture --yes
 
+          # `nuxi typecheck` needs vue-tsc, which the starter leaves out and Nuxt's TypeScript docs
+          # add. vue-tsc cannot load TypeScript 7, so typescript stays at 6, as create-vue pins it.
           - id: nuxt
-            scaffold: npm create nuxt@latest fixture -- --template minimal --packageManager npm --no-gitInit --no-modules
+            scaffold: |
+              npm create nuxt@latest fixture -- --template minimal --packageManager npm --no-gitInit --no-modules
+              cd fixture && npm install --save-dev vue-tsc typescript@6
 
           - id: react-vite
             scaffold: |
@@ -151,14 +155,21 @@ jobs:
               npm create vue@latest fixture -- --ts --eslint
               cd fixture && npm install
 
+          # `ng new` configures no linter; Angular's `ng lint` docs add one with `ng add`.
           - id: angular
-            scaffold: npx @angular/cli@latest new fixture --defaults --skip-git
+            scaffold: |
+              npx @angular/cli@latest new fixture --defaults --skip-git
+              cd fixture && npx ng add angular-eslint --skip-confirmation
 
           - id: sveltekit
             scaffold: npx sv create fixture --template minimal --types ts --no-add-ons --install npm
 
+          # Without @astrojs/check, `astro check` in CI logs an error and exits 0 having checked
+          # nothing, so the fixture installs it. It supports TypeScript 6, not 7.
           - id: astro
-            scaffold: npm create astro@latest fixture -- --template minimal --install --no-git --skip-houston --yes
+            scaffold: |
+              npm create astro@latest fixture -- --template minimal --install --no-git --skip-houston --yes
+              cd fixture && npm install --save-dev @astrojs/check typescript@6
 
           # React Router 7's creator. `--yes` also makes a git commit, which needs an identity.
           - id: remix
@@ -185,14 +196,232 @@ jobs:
           - id: hono
             scaffold: npm create hono@latest fixture -- --template nodejs --install --pm npm
 
+          # The api kit fails its own lint: `create` regenerates database/schema.ts on one long
+          # line. The hypermedia kit, listed first, generates a schema that fits.
           - id: adonisjs
-            scaffold: npm create adonisjs@latest fixture -- --kit=api --pkg=npm
+            scaffold: npm create adonisjs@latest fixture -- --kit=hypermedia --pkg=npm
 
+          # Expo's ESLint setup is a first `npx expo lint`: it installs and configures ESLint, then
+          # fails to load it in that same process. The gate's run afterwards is the real lint.
           - id: expo
-            scaffold: npx create-expo-app@latest fixture --yes
+            scaffold: |
+              npx create-expo-app@latest fixture --yes
+              cd fixture && (npx expo lint || true)
 
           - id: react-native
             scaffold: npx @react-native-community/cli@latest init Fixture --directory fixture --pm npm --skip-git-init --install-pods false
+
+          # ---- Python (setup-python: the image's own Python refuses pip installs, PEP 668) ----
+          - id: django
+            setupPython: true
+            scaffold: |
+              pip install django ruff
+              django-admin startproject fixture
+
+          # fastapi-new writes no test and pytest exits 5 on none, so the fixture gets the
+          # TestClient test from FastAPI's testing docs. Its uv venv goes on PATH for the gates.
+          - id: fastapi
+            setupPython: true
+            scaffold: |
+              pip install uv
+              uvx fastapi-new fixture
+              cd fixture && uv add --dev ruff mypy pytest
+              printf 'from fastapi.testclient import TestClient\n\nfrom main import app\n\n\ndef test_root() -> None:\n    assert TestClient(app).get("/").status_code == 200\n' \
+                > test_main.py
+              echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+          # `streamlit init` asks whether to start the app, so stdin says no. pytest exits 5 on
+          # no tests, so the fixture gets an AppTest smoke test from Streamlit's testing docs.
+          - id: streamlit
+            setupPython: true
+            scaffold: |
+              pip install streamlit ruff pytest
+              echo n | streamlit init fixture
+              printf 'from streamlit.testing.v1 import AppTest\n\n\ndef test_app_runs() -> None:\n    assert not AppTest.from_file("streamlit_app.py").run().exception\n' \
+                > fixture/test_app.py
+
+          # ---- Go (setup-go: the image only caches toolchains) ----
+
+          # The go base alone: the module and hello world from the Go tutorial.
+          - id: go
+            setupGo: true
+            scaffold: |
+              mkdir -p fixture && cd fixture
+              go mod init example/hello
+              printf 'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("Hello, World!")\n}\n' > hello.go
+
+          # `fiber new` runs only `go mod init`; `go mod tidy` records the import its template makes.
+          - id: fiber
+            setupGo: true
+            scaffold: |
+              go install github.com/gofiber/cli/fiber@latest
+              fiber new fixture
+              cd fixture && go mod tidy
+
+          # Gin, Echo and chi ship no creator: each fixture is its docs' quick start
+          # (`go mod init`, `go get`, the hello-world main.go), then `go mod tidy`.
+          - id: gin
+            setupGo: true
+            scaffold: |
+              mkdir -p fixture && cd fixture
+              go mod init fixture
+              go get -u github.com/gin-gonic/gin
+              cat > main.go <<'EOF'
+              package main
+
+              import "github.com/gin-gonic/gin"
+
+              func main() {
+                router := gin.Default()
+                router.GET("/ping", func(c *gin.Context) {
+                  c.JSON(200, gin.H{
+                    "message": "pong",
+                  })
+                })
+                router.Run()
+              }
+              EOF
+              go mod tidy
+
+          - id: echo
+            setupGo: true
+            scaffold: |
+              mkdir -p fixture && cd fixture
+              go mod init fixture
+              go get github.com/labstack/echo/v5
+              cat > main.go <<'EOF'
+              package main
+
+              import (
+                "net/http"
+
+                "github.com/labstack/echo/v5"
+                "github.com/labstack/echo/v5/middleware"
+              )
+
+              func main() {
+                e := echo.New()
+
+                e.Use(middleware.RequestLogger())
+                e.Use(middleware.Recover())
+
+                e.GET("/", func(c *echo.Context) error {
+                  return c.JSON(http.StatusOK, map[string]string{"message": "Hello, World!"})
+                })
+
+                if err := e.Start(":1323"); err != nil {
+                  e.Logger.Error("failed to start server", "error", err)
+                }
+              }
+              EOF
+              go mod tidy
+
+          - id: chi
+            setupGo: true
+            scaffold: |
+              mkdir -p fixture && cd fixture
+              go mod init fixture
+              go get -u github.com/go-chi/chi/v5
+              cat > main.go <<'EOF'
+              package main
+
+              import (
+                "net/http"
+
+                "github.com/go-chi/chi/v5"
+                "github.com/go-chi/chi/v5/middleware"
+              )
+
+              func main() {
+                r := chi.NewRouter()
+                r.Use(middleware.Logger)
+                r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+                  w.Write([]byte("welcome"))
+                })
+                http.ListenAndServe(":3000", r)
+              }
+              EOF
+              go mod tidy
+
+          # ---- Rust (preinstalled; the image lists rustfmt but not clippy, so it is added) ----
+          - id: rust
+            scaffold: |
+              rustup component add clippy
+              cargo new fixture
+
+          # axum, Actix Web and Rocket ship no creator: each fixture is `cargo new`, the
+          # dependency their docs name, and the docs' hello world.
+          - id: axum
+            scaffold: |
+              rustup component add clippy
+              cargo new fixture && cd fixture
+              cargo add axum
+              cargo add tokio --features full
+              cat > src/main.rs <<'EOF'
+              use axum::{routing::get, Router};
+
+              #[tokio::main]
+              async fn main() {
+                  let app = Router::new().route("/", get(|| async { "Hello, World!" }));
+                  let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+                  axum::serve(listener, app).await.unwrap();
+              }
+              EOF
+
+          - id: actix
+            scaffold: |
+              rustup component add clippy
+              cargo new fixture && cd fixture
+              cargo add actix-web@4
+              cat > src/main.rs <<'EOF'
+              use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+
+              #[get("/")]
+              async fn hello() -> impl Responder {
+                  HttpResponse::Ok().body("Hello world!")
+              }
+
+              #[post("/echo")]
+              async fn echo(req_body: String) -> impl Responder {
+                  HttpResponse::Ok().body(req_body)
+              }
+
+              async fn manual_hello() -> impl Responder {
+                  HttpResponse::Ok().body("Hey there!")
+              }
+
+              #[actix_web::main]
+              async fn main() -> std::io::Result<()> {
+                  HttpServer::new(|| {
+                      App::new()
+                          .service(hello)
+                          .service(echo)
+                          .route("/hey", web::get().to(manual_hello))
+                  })
+                  .bind(("127.0.0.1", 8080))?
+                  .run()
+                  .await
+              }
+              EOF
+
+          - id: rocket
+            scaffold: |
+              rustup component add clippy
+              cargo new fixture && cd fixture
+              cargo add rocket@0.5.1
+              cat > src/main.rs <<'EOF'
+              #[macro_use] extern crate rocket;
+
+              #[get("/")]
+              fn index() -> &'static str {
+                  "Hello, world!"
+              }
+
+              #[launch]
+              fn rocket() -> _ {
+                  rocket::build().mount("/", routes![index])
+              }
+              EOF
 
           # ---- Swift (preinstalled on the 24.04 image; the 26.04 image ships none) ----
           - id: swift
@@ -229,6 +458,16 @@ jobs:
 
       - uses: denoland/setup-deno@v2
         if: matrix.setupDeno
+
+      - uses: actions/setup-python@v7
+        if: matrix.setupPython
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-go@v7
+        if: matrix.setupGo
+        with:
+          go-version: stable
 
       - uses: shivammathur/setup-php@v2
         if: matrix.setupPhp
