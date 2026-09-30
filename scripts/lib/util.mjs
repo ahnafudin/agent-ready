@@ -1,7 +1,7 @@
 // scripts/lib/util.mjs — helpers shared by the repo's scripts.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -49,10 +49,16 @@ export function runTool(cmd, args = []) {
   return tryRun([quote(cmd), ...args.map(quote)].join(" "), undefined, { shell: true });
 }
 
-/** Normalized path for equality checks: git prints forward slashes on Windows
- *  and drive-letter case can differ between tools. */
+/** Normalized path for equality checks: symlinks resolved (macOS temp dirs are one), forward slashes,
+ *  and case-folded on Windows, where tools disagree on drive-letter case. */
 export function norm(p) {
-  const r = resolve(p).split("\\").join("/");
+  let real = resolve(p);
+  try {
+    real = realpathSync(real);
+  } catch {
+    // not on disk yet: compare it as written
+  }
+  const r = real.split("\\").join("/");
   return process.platform === "win32" ? r.toLowerCase() : r;
 }
 

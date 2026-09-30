@@ -5,7 +5,7 @@
   "type": "module",
   "description": "TODO:fill — one-line project description",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "scripts": {
     "setup": "node scripts/setup.mjs",

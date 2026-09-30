@@ -57,7 +57,7 @@ Then fill the placeholders — search for `TODO:fill`:
       `docs/TOOLING-LICENSE` (it covers the copied tooling), so the root is yours to choose
 - [ ] Delete the SETUP NOTE at the top of `AGENTS.md`
 
-Prerequisites: Node ≥ 18, git, and (optional) **bd** — the official release binary from
+Prerequisites: Node ≥ 22, git, and (optional) **bd** — the official release binary from
 <https://github.com/gastownhall/beads> or `brew install beads`. Avoid CGO-less `go install` builds:
 embedded Dolt refuses to open with them, and the npm package `@beads/bd` has a broken postinstall.
 `npm run setup` completes fine without bd.

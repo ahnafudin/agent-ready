@@ -2,7 +2,7 @@
 // and the dubious-ownership detector stops a misleading "run git init" suggestion.
 
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
@@ -86,6 +86,18 @@ describe("dubiousOwnership", () => {
 describe("norm", () => {
   it("normalises separators so path comparisons survive Windows", () => {
     assert.ok(!norm("a/b").includes("\\"));
+  });
+
+  it("sees a symlinked directory as its target, as git does", () => {
+    const base = mkdtempSync(join(tmpdir(), "tooling-norm-"));
+    try {
+      const target = join(base, "real");
+      mkdirSync(target);
+      symlinkSync(target, join(base, "link"), "junction"); // "junction" needs no admin rights on Windows
+      assert.equal(norm(join(base, "link")), norm(target));
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
   });
 });
 

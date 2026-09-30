@@ -1,6 +1,6 @@
 // Tests for scripts/version.mjs — the riskiest code in agent-ready: it
 // rewrites manifests and the post-commit hook then amends the commit around it.
-// Zero dependencies: `node --test`, which every Node ≥18 already has.
+// Zero dependencies: `node --test`, which every supported Node already has.
 
 import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";

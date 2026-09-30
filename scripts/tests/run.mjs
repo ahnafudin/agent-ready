@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// scripts/tests/run.mjs — runs the suite with explicit file paths: cmd.exe and Node 20 do not expand globs.
+// scripts/tests/run.mjs — runs the suite with explicit file paths, so no shell has to expand a glob.
 // Usage: node scripts/tests/run.mjs [extra node --test flags]
 
 import { spawnSync } from "node:child_process";
