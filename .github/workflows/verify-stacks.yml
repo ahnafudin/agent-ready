@@ -18,7 +18,7 @@ permissions:
 jobs:
   verify:
     name: ${{ matrix.id }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runsOn || 'ubuntu-latest' }}
     # One entry failing must not hide the others — the point of a run is the
     # whole picture, not the first problem.
     strategy:
@@ -111,9 +111,9 @@ jobs:
               printf 'import { expect, test } from "bun:test";\ntest("smoke", () => expect(1).toBe(1));\n' \
                 > fixture/smoke.test.ts
 
-          # ---- Swift ----
+          # ---- Swift (preinstalled on the 24.04 image; the 26.04 image ships none) ----
           - id: swift
-            setupSwift: true
+            runsOn: ubuntu-24.04
             scaffold: |
               mkdir -p fixture && cd fixture
               # `--type executable` ships no Tests/ directory, and `swift test`
@@ -135,17 +135,14 @@ jobs:
               echo "m_EditorVersion: 2022.3.0f1" > fixture/ProjectSettings/ProjectVersion.txt
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
 
       - uses: oven-sh/setup-bun@v2
         if: matrix.setupBun
-
-      - uses: swift-actions/setup-swift@v2
-        if: matrix.setupSwift
 
       - uses: shivammathur/setup-php@v2
         if: matrix.setupPhp
