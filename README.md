@@ -105,9 +105,10 @@ Deliberately **not** touched, because they are release counters rather than semv
 ## Quick start
 
 ```bash
-# 1. copy the template (GitHub: "Use this template", or)
-gh repo create my-project --template <owner>/agent-ready --private --clone
+# 1. copy it into a new project with a history of its own (nothing links back here)
+git clone --depth 1 https://github.com/ahnafudin/agent-ready.git my-project
 cd my-project
+rm -rf .git && git init
 
 # 2. bootstrap (safe to re-run any time)
 npm install          # activates the version hook via postinstall
@@ -168,6 +169,8 @@ The first `npm run setup` in a **renamed** project de-templates it, once:
 | `vibe.gates` (commands that maintain the template) | your framework's gates, from the registry |
 | the `test` npm script (the tooling's own suite) | free for your project; the suite stays at `test:template` |
 | no beads workspace | initialised with YOUR issue prefix and remote |
+| this template's MIT `LICENSE` | kept as `docs/TEMPLATE-LICENSE` beside the tooling it covers; the root is yours to license |
+| `CONTRIBUTING.md` (how to contribute to the template) | removed |
 
 All of it is keyed off `vibe.ownedByTemplate` and happens exactly once. Nothing you have written is
 ever replaced. `scripts/tests/derived-project.test.mjs` builds a copy, renames it, bootstraps it and
@@ -187,10 +190,12 @@ CLAUDE.md              @AGENTS.md import + Claude-Code-only extras
 GEMINI.md  CONVENTIONS.md  .cursor/  .windsurf/  .clinerules/  .junie/  .github/copilot-instructions.md
                        generated pointers — do not hand-edit
 SETUP.md               fill-in checklist · second-machine checklist
+CONTRIBUTING.md  LICENSE  how to contribute · MIT (both leave a project made from the template)
 docs/
   STACK.md             GENERATED per project: framework, core layer, gate commands
   VERIFYING.md         how an entry earns `verified`, and what that has caught
   TEMPLATE.md          this README, once a project has been made from the template
+  TEMPLATE-LICENSE     this template's licence, likewise
   PRD.md  ARCHITECTURE.md  FEATURES.md  TASKS.md  ROADMAP.md  VERSIONING.md
   archive/             STATUS_ARCHIVE.md · TASKS_ARCHIVE.md  (the anti-bloat contract)
 scripts/
@@ -200,7 +205,7 @@ scripts/
   gate.mjs             `npm run gate`
   version.mjs          semver source of truth + every manifest it syncs
   sync-agents.mjs      AGENTS.md → per-tool pointer files
-  personalize.mjs      de-template a fresh copy (version → 0.1.0, project README)
+  personalize.mjs      de-template a fresh copy (version → 0.1.0, project README, licence)
   verify-stack.mjs     detect + run the gates of a scaffolded project
   check-attribution.mjs  the commit-msg rule, applied to history in CI
   setup.mjs  install-hooks.mjs  bd-prime.mjs
@@ -217,19 +222,13 @@ scripts/
   verify-stacks.yml    scaffolds real projects and verifies registry entries
 ```
 
-## Contributing to the template itself
+## Contributing
 
-`npm run gate` is the whole contract: it validates the registry against its schema, checks the
-generated pointer files are in sync, and runs the full suite (`node --test`, zero dependencies)
-covering every version-manifest planner, every detection rule, the commit-msg hook, the
-documented commands themselves, and a simulated project built from this template.
+Fork, branch, `npm run gate`, pull request. The full guide — and the invariants the test suite
+protects — is [CONTRIBUTING.md](https://github.com/ahnafudin/agent-ready/blob/main/CONTRIBUTING.md).
 
-The invariants those tests protect, which are easy to break by accident:
+## License
 
-- a bump must never touch a Cargo **dependency** version, a Maven `<parent>` or dependency version,
-  an Android `versionCode`, or a Flutter build number;
-- `writeAll` must validate **every** manifest before writing **any** of them;
-- `react-vite` must not claim every React-based framework (that is what `detect.all` is for);
-- a polyglot repo must report **both** stacks, not just the loudest one;
-- every pointer file must restate the non-negotiables inline, not merely link to `AGENTS.md`;
-- no doc may print an `npm run <script> --flag` form that npm will swallow.
+[MIT](https://github.com/ahnafudin/agent-ready/blob/main/LICENSE) © 2026 ahnafudin. A project
+made from this template keeps that notice in `docs/TEMPLATE-LICENSE`, beside the tooling it
+covers, and chooses its own licence.

@@ -6,8 +6,8 @@
 // only by generating a real app (Electron, then Tauri) and running it — never by
 // the unit tests, because every one of them is invisible from inside this repo.
 //
-// So the simulation is automated here. This builds a copy of exactly what "Use
-// this template" hands over (the git-tracked files, nothing else), renames it,
+// So the simulation is automated here. This builds a copy of exactly what a
+// fresh copy holds (the git-tracked files, nothing else), renames it,
 // runs the bootstrap steps a new project would run, and then runs THIS ENTIRE
 // TEST SUITE inside that copy. Any future leak of the same family fails here
 // instead of in somebody's new repo.
@@ -94,6 +94,15 @@ describe("a project made from this template", { skip: INSIDE && "running inside 
     assert.ok(!readme.includes(TEMPLATE_README_MARKER));
     assert.match(readme, new RegExp(`^# ${PROJECT_NAME}`, "m"));
     assert.match(read("docs/TEMPLATE.md"), /agent-ready/, "the template's own README is still available");
+  });
+
+  it("leaves the licence and the contribution guide to the new owner", () => {
+    // The template's MIT licence names ITS author, so at the root it would claim
+    // the new project. MIT requires the notice to travel with the copied
+    // tooling, so it is kept beside the template's README instead of deleted.
+    assert.ok(!existsSync(join(dir, "LICENSE")), "the template's licence would claim the new project");
+    assert.match(read("docs/TEMPLATE-LICENSE"), /^MIT License/, "the tooling's licence notice must survive");
+    assert.ok(!existsSync(join(dir, "CONTRIBUTING.md")), "a guide to contributing to the TEMPLATE is noise here");
   });
 
   it("runs ITS gates, not the template's maintenance checks", () => {

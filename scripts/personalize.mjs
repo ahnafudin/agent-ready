@@ -4,8 +4,8 @@
 //
 // Every bug found by generating real apps from this template had the same
 // shape: template scaffolding surviving into the project that was made from it.
-// The beads identity. The gates. The npm `test` script. And the two this file
-// fixes — the version and the README.
+// The beads identity. The gates. The npm `test` script. And the four this file
+// fixes — the version, the README, the licence and the contribution guide.
 //
 //   version   a new project starts at 0.1.0, not at whatever release the
 //             template itself had reached (0.2.x, and climbing)
@@ -14,6 +14,12 @@
 //             framework registry" and concludes the project IS the template.
 //             It moves to docs/TEMPLATE.md — still needed, since it documents
 //             the tooling — and a project README takes its place.
+//   LICENSE   the template's MIT licence names the TEMPLATE's author; left at
+//             the root it would claim the new project. MIT requires the notice
+//             to travel with the copied tooling, so it moves to
+//             docs/TEMPLATE-LICENSE, and the root is left for the owner's choice.
+//   CONTRIBUTING.md  explains how to contribute to the TEMPLATE — noise in a
+//             project, and GitHub would show it on every new issue. Removed.
 //
 // Two conditions, both required, so this can never fire on a real project:
 //   - package.json no longer carries the placeholder name (someone renamed it)
@@ -21,15 +27,24 @@
 // `scripts/stacks.mjs` clears that flag immediately afterwards in setup, when it
 // swaps the template's gates for the detected framework's.
 
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { isUnrenamedTemplate, note as write, parseFlags, readJson, ROOT, writeIfChanged } from "./lib/util.mjs";
 
 /** Marks a README as still being the template's own, and therefore replaceable. */
 export const TEMPLATE_README_MARKER = "<!-- vibe:template-readme -->";
+/** Marks a CONTRIBUTING.md as the template's own, and therefore removable. */
+export const TEMPLATE_CONTRIBUTING_MARKER = "<!-- vibe:template-contributing -->";
+/**
+ * The template's LICENSE, recognised by its holder line — a licence the owner
+ * wrote names someone else and is never moved. (The marker trick is not used
+ * here: a comment in LICENSE would stop GitHub recognising it as MIT.)
+ */
+const TEMPLATE_LICENSE = /^Copyright \(c\) [\d, -]+ ahnafudin$/m;
 export const FRESH_VERSION = "0.1.0";
 const KEPT_AS = join("docs", "TEMPLATE.md");
+const LICENSE_KEPT_AS = join("docs", "TEMPLATE-LICENSE");
 
 const note = (msg) => write(msg, "[personalize] ");
 
@@ -59,6 +74,7 @@ function projectReadme(pkg) {
     "| Architecture and key decisions | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |",
     "| What is being built next | [`docs/TASKS.md`](docs/TASKS.md) |",
     "| How the tooling in `scripts/` works | [`docs/TEMPLATE.md`](docs/TEMPLATE.md) |",
+    "| The licence that tooling came with — keep it beside `scripts/` | [`docs/TEMPLATE-LICENSE`](docs/TEMPLATE-LICENSE) |",
     "",
   ].join("\n");
 }
@@ -97,6 +113,23 @@ export function personalize({ root = ROOT } = {}) {
     mkdirSync(dirname(keptPath), { recursive: true });
     if (writeIfChanged(keptPath, readme)) changed.push(`${KEPT_AS.split("\\").join("/")} (template docs kept here)`);
     if (writeIfChanged(readmePath, projectReadme(pkg))) changed.push("README.md (now describes this project)");
+  }
+
+  // 3. Keep the template's licence with the tooling it covers, and leave the
+  //    root for the licence the owner picks for THIS project.
+  const licensePath = join(root, "LICENSE");
+  const license = existsSync(licensePath) ? readFileSync(licensePath, "utf8") : "";
+  if (TEMPLATE_LICENSE.test(license)) {
+    writeIfChanged(join(root, LICENSE_KEPT_AS), license);
+    rmSync(licensePath);
+    changed.push(`LICENSE (the template's, kept as ${LICENSE_KEPT_AS.split("\\").join("/")}; choose your own)`);
+  }
+
+  // 4. A guide to contributing to the template has no place in a project.
+  const contributingPath = join(root, "CONTRIBUTING.md");
+  if (existsSync(contributingPath) && readFileSync(contributingPath, "utf8").includes(TEMPLATE_CONTRIBUTING_MARKER)) {
+    rmSync(contributingPath);
+    changed.push("CONTRIBUTING.md (the template's, removed)");
   }
 
   return { skipped: null, changed };
