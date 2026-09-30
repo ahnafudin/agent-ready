@@ -111,6 +111,89 @@ jobs:
               printf 'import { expect, test } from "bun:test";\ntest("smoke", () => expect(1).toBe(1));\n' \
                 > fixture/smoke.test.ts
 
+          # The bun base alone. `bun init` writes no test, so it gets elysia's smoke test.
+          - id: bun
+            setupBun: true
+            scaffold: |
+              bun init -y fixture
+              printf 'import { expect, test } from "bun:test";\ntest("smoke", () => expect(1).toBe(1));\n' \
+                > fixture/smoke.test.ts
+
+          # ---- Deno ----
+          - id: deno
+            setupDeno: true
+            scaffold: deno init fixture
+
+          # ---- Node (npm; without a TTY each creator runs on its flags and defaults) ----
+
+          # npm init's placeholder test script exits 1 by design, so the fixture gets a
+          # real test, as elysia does.
+          - id: node
+            scaffold: |
+              mkdir -p fixture && cd fixture
+              npm init -y
+              npm pkg set scripts.test="node --test"
+              printf 'import test from "node:test";\ntest("smoke", () => {});\n' > smoke.test.mjs
+
+          - id: nextjs
+            scaffold: npx create-next-app@latest fixture --yes
+
+          - id: nuxt
+            scaffold: npm create nuxt@latest fixture -- --template minimal --packageManager npm --no-gitInit --no-modules
+
+          - id: react-vite
+            scaffold: |
+              npm create vite@latest fixture -- --template react-ts --no-interactive
+              cd fixture && npm install
+
+          - id: vue
+            scaffold: |
+              npm create vue@latest fixture -- --ts --eslint
+              cd fixture && npm install
+
+          - id: angular
+            scaffold: npx @angular/cli@latest new fixture --defaults --skip-git
+
+          - id: sveltekit
+            scaffold: npx sv create fixture --template minimal --types ts --no-add-ons --install npm
+
+          - id: astro
+            scaffold: npm create astro@latest fixture -- --template minimal --install --no-git --skip-houston --yes
+
+          # React Router 7's creator. `--yes` also makes a git commit, which needs an identity.
+          - id: remix
+            scaffold: npx create-react-router@latest fixture --yes --no-git-init
+
+          - id: solidstart
+            scaffold: |
+              npm create solid@latest -- --project-name fixture --solidstart --v2 --template basic --ts
+              cd fixture && npm install
+
+          - id: express
+            scaffold: |
+              npx express-generator --view=pug fixture
+              cd fixture && npm install
+
+          - id: nestjs
+            scaffold: npx @nestjs/cli@latest new fixture --package-manager npm --skip-git
+
+          - id: fastify
+            scaffold: |
+              npx fastify-cli generate fixture
+              cd fixture && npm install
+
+          - id: hono
+            scaffold: npm create hono@latest fixture -- --template nodejs --install --pm npm
+
+          - id: adonisjs
+            scaffold: npm create adonisjs@latest fixture -- --kit=api --pkg=npm
+
+          - id: expo
+            scaffold: npx create-expo-app@latest fixture --yes
+
+          - id: react-native
+            scaffold: npx @react-native-community/cli@latest init Fixture --directory fixture --pm npm --skip-git-init --install-pods false
+
           # ---- Swift (preinstalled on the 24.04 image; the 26.04 image ships none) ----
           - id: swift
             runsOn: ubuntu-24.04
@@ -143,6 +226,9 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         if: matrix.setupBun
+
+      - uses: denoland/setup-deno@v2
+        if: matrix.setupDeno
 
       - uses: shivammathur/setup-php@v2
         if: matrix.setupPhp
