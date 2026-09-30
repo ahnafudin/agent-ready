@@ -5,8 +5,7 @@
 
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { pathToFileURL } from "node:url";
-import { at, note as write, parseFlags } from "./lib/util.mjs";
+import { at, isMain, note as write, parseFlags } from "./lib/util.mjs";
 
 const note = (msg) => write(msg, "[attribution] ");
 
@@ -100,6 +99,6 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   process.exit(main(process.argv.slice(2)));
 }

@@ -152,7 +152,7 @@ describe("a project made from agent-ready", { skip: INSIDE && "running inside th
 
   it("passes the whole tooling suite — the check that would have caught all six", () => {
     // TAP because its `# pass N` / `# fail N` lines are stable to assert on.
-    // run.mjs, not a glob: this spawn has no shell, and Node 20 cannot expand globs itself.
+    // run.mjs, not a glob: this spawn has no shell to expand one.
     const r = node(
       [join(dir, "scripts", "tests", "run.mjs"), "--test-reporter=tap"],
       dir,

@@ -4,9 +4,8 @@
 
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { runGates } from "./gate.mjs";
-import { parseFlags } from "./lib/util.mjs";
+import { isMain, parseFlags } from "./lib/util.mjs";
 import { detectResolved, loadRegistry, mergeGates } from "./stacks.mjs";
 
 const note = (msg) => process.stderr.write(`${msg}\n`);
@@ -100,6 +99,6 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   process.exit(main(process.argv.slice(2)));
 }

@@ -4,8 +4,9 @@
 
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { expandGlob, isFile } from "./lib/glob.mjs";
+import { isMain } from "./lib/util.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PKG = join(ROOT, "package.json");
@@ -431,6 +432,6 @@ function main(argv) {
 }
 
 // Run the CLI only when invoked directly, so tests can import without writing manifests.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMain(import.meta.url)) {
   main(process.argv.slice(2));
 }

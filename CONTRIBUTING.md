@@ -23,7 +23,8 @@ improvements come back here through a fork and a pull request.
 3. Make the change. The rules agents follow here live in `AGENTS.md`: edit them there, never in a
    generated pointer file, then run `npm run agents:sync`.
 4. `npm run gate` must be green. Paste its summary into the pull request.
-5. Open the pull request against `main`. CI runs the same gate on Node 20, 22 and 24.
+5. Open the pull request against `main`. CI runs the same gate on Linux (Node 22, 24 and 26), Windows
+   and macOS.
 
 ## Commits
 
@@ -54,7 +55,7 @@ The invariants those tests protect, which are easy to break by accident:
 Two more rules without a test of their own:
 
 - **Keep the tooling dependency-free.** Node's standard library only, so a copy works anywhere Node
-  18+ does.
+  22+ does.
 - **Keep other people's product names out of the source.** Naming them reads as an endorsement or a
   comparison. `bd` is the exception, because it ships with agent-ready.
 

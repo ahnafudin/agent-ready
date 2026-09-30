@@ -9,15 +9,20 @@ on:
 
 jobs:
   gate:
-    runs-on: ubuntu-latest
-    # Several Node versions on purpose. A test that spawned `node --test <glob>`
-    # without a shell passed on 24 and failed on 20, because Node only learned to
-    # expand globs itself in v21 — a single-version job hid that for four commits.
+    # Every supported Node on Linux, the LTS on Windows and macOS: behaviour differs across both.
     strategy:
       fail-fast: false
       matrix:
-        node: ["20", "22", "24"]
-    name: gate (node ${{ matrix.node }})
+        os: [ubuntu-latest]
+        node: ["22", "24", "26"]
+        include:
+          - { os: windows-latest, node: "24" }
+          - { os: macos-latest, node: "24" }
+    runs-on: ${{ matrix.os }}
+    name: gate (${{ matrix.os }}, node ${{ matrix.node }})
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
 
