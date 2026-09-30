@@ -33,7 +33,7 @@ export const TARGETS = [
 const NON_NEGOTIABLE = [
   "**Read `AGENTS.md` first.** It holds the full working rules for this repo. Everything below is the short version.",
   "**Read before writing.** Open the file you are about to change; never edit from memory.",
-  "**One command for quality gates, whatever the language: `npm run gate`** (`npm run gate:list` shows what it runs, `npm run gate test` runs one stage). Actual commands live in `package.json` → `vibe.gates`. Do not invent your own build/test command — if a gate is wrong, fix it there.",
+  "**One command for quality gates, whatever the language: `npm run gate`** (`npm run gate:list` shows what it runs, `npm run gate test` runs one stage). Actual commands live in `package.json` → `tooling.gates`. Do not invent your own build/test command — if a gate is wrong, fix it there.",
   "**Verify before claiming.** \"Done\", \"fixed\" and \"passing\" require real `npm run gate` output. Never report success from inspection alone.",
   "**Finish 100%.** One task complete — code, tests, gates green — before starting the next.",
   "**No duplication.** Anything used from 2+ places gets extracted into a shared util. No dead code, no orphan files.",

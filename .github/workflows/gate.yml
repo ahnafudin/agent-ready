@@ -1,6 +1,6 @@
 # One workflow for every stack: CI runs the same `npm run gate` a developer and
 # an AI agent run locally, so "gates green" means the same thing everywhere.
-# The actual commands come from package.json -> vibe.gates.
+# The actual commands come from package.json -> tooling.gates.
 name: gate
 
 on:

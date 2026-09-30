@@ -9,7 +9,9 @@ import { at, git, hooksDirFor, norm, note as write, parseFlags, ROOT, safeDirect
 
 const HOOK_DIR = at(".githooks");
 /** Present in every hook agent-ready owns, so a foreign one is never clobbered. */
-const MARKER = "vibe:hook";
+const MARKER = "tooling:hook";
+/** The marker before the namespace rename; installed copies still carry it until refreshed. */
+const OLD_MARKER = "vibe:hook";
 
 const note = (msg) => write(msg, "[hooks] ");
 
@@ -67,7 +69,8 @@ function syncInto(dir, label) {
     const existing = existsSync(target) ? readFileSync(target, "utf8") : null;
     // `version.mjs` recognises the copy bd made of our post-commit BEFORE the
     // marker existed, so an already-set-up repo migrates instead of stalling.
-    const isOurs = existing === null || existing.includes(MARKER) || existing.includes("version.mjs");
+    const isOurs =
+      existing === null || [MARKER, OLD_MARKER, "version.mjs"].some((sign) => existing.includes(sign));
     if (!isOurs) {
       foreign.push(name); // somebody else's hook of the same name — leave it alone
       continue;

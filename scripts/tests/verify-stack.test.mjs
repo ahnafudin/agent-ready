@@ -13,7 +13,7 @@ const trash = [];
 after(() => trash.forEach((d) => rmSync(d, { recursive: true, force: true })));
 
 function fixture(files) {
-  const dir = mkdtempSync(join(tmpdir(), "vibe-verify-"));
+  const dir = mkdtempSync(join(tmpdir(), "tooling-verify-"));
   trash.push(dir);
   for (const [rel, body] of Object.entries(files)) {
     mkdirSync(join(dir, rel, ".."), { recursive: true });

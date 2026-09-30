@@ -72,7 +72,7 @@ shell script would leave the dirty-manifest guard silently checking the wrong fi
 
 Built-in guards (all fail-soft):
 
-- **Recursion:** the amend re-triggers post-commit; a `VIBE_VERSION_AMEND` env guard stops it.
+- **Recursion:** the amend re-triggers post-commit; a `TOOLING_VERSION_AMEND` env guard stops it.
 - **Sequences:** the hook skips entirely during rebase / merge / cherry-pick / revert / bisect —
   amending mid-sequence is the classic double-bump corruption.
 - **Dirty manifests:** if a version manifest already has local edits, the hook skips (with a stderr

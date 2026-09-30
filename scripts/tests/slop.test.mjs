@@ -144,13 +144,13 @@ describe("configuration", () => {
     assert.ok(!globToRegExp("src/*.ts").test("src/deep/a.ts"));
   });
 
-  it("reads vibe.slop, falling back to three lines for both limits", () => {
+  it("reads tooling.slop, falling back to three lines for both limits", () => {
     const pkg = join(dir, "config.json");
-    writeFileSync(pkg, JSON.stringify({ vibe: { slop: { maxCommentLines: 5, maxDocCommentLines: 9, ignore: ["legacy/**"] } } }));
+    writeFileSync(pkg, JSON.stringify({ tooling: { slop: { maxCommentLines: 5, maxDocCommentLines: 9, ignore: ["legacy/**"] } } }));
     const config = slopConfig(pkg);
     assert.deepEqual([config.maxCommentLines, config.maxDocCommentLines], [5, 9]);
     assert.ok(config.ignore[0].test("legacy/old.js"));
-    writeFileSync(pkg, JSON.stringify({ vibe: { slop: { maxCommentLines: "lots" } } }));
+    writeFileSync(pkg, JSON.stringify({ tooling: { slop: { maxCommentLines: "lots" } } }));
     assert.deepEqual([slopConfig(pkg).maxCommentLines, slopConfig(pkg).maxDocCommentLines], [3, 3]);
   });
 });
@@ -158,7 +158,7 @@ describe("configuration", () => {
 describe("the gate check and the editor hook", () => {
   const project = join(dir, "project");
   mkdirSync(join(project, "legacy"), { recursive: true });
-  writeFileSync(join(project, "package.json"), JSON.stringify({ vibe: { slop: { ignore: ["legacy/**"] } } }));
+  writeFileSync(join(project, "package.json"), JSON.stringify({ tooling: { slop: { ignore: ["legacy/**"] } } }));
   writeFileSync(join(project, "long.js"), lines(...repeat(5, "// c"), "f();"));
   writeFileSync(join(project, "short.js"), lines("// fine", "f();"));
   writeFileSync(join(project, "legacy", "old.js"), lines(...repeat(9, "// c"), "f();"));

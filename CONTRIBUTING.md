@@ -1,4 +1,4 @@
-<!-- vibe:contributing -->
+<!-- tooling:contributing -->
 # Contributing to agent-ready
 
 Thank you for helping. People start their own projects from a copy of this repository, and

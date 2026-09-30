@@ -21,7 +21,7 @@ export function concreteName(pattern) {
 
 /** Build the smallest repo in which `entry`'s detection should fire. */
 function materialise(entry) {
-  const dir = mkdtempSync(join(tmpdir(), "vibe-reach-"));
+  const dir = mkdtempSync(join(tmpdir(), "tooling-reach-"));
   trash.push(dir);
   const files = new Map(); // path → contents, so two signals on one file merge
   const deps = {};

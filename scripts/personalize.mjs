@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // scripts/personalize.mjs — turns a pristine copy of agent-ready into this project, once, early in setup.
-// Fires only on a renamed package.json that still has `vibe.pristine` (stacks.mjs clears it next).
+// Fires only on a renamed package.json that still has `tooling.pristine` (stacks.mjs clears it next).
 
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -8,9 +8,9 @@ import { pathToFileURL } from "node:url";
 import { isUnrenamed, note as write, parseFlags, readJson, ROOT, writeIfChanged } from "./lib/util.mjs";
 
 /** Marks a README as still being agent-ready's own, and therefore replaceable. */
-export const OWN_README_MARKER = "<!-- vibe:readme -->";
+export const OWN_README_MARKER = "<!-- tooling:readme -->";
 /** Marks a CONTRIBUTING.md as agent-ready's own, and therefore removable. */
-export const OWN_CONTRIBUTING_MARKER = "<!-- vibe:contributing -->";
+export const OWN_CONTRIBUTING_MARKER = "<!-- tooling:contributing -->";
 /**
  * Agent-ready's LICENSE, recognised by its holder line — a licence the owner
  * wrote names someone else and is never moved. (The marker trick is not used
@@ -67,7 +67,7 @@ export function personalize({ root = ROOT } = {}) {
   const pkgPath = join(root, "package.json");
   const raw = existsSync(pkgPath) ? readFileSync(pkgPath, "utf8") : null;
   const pkg = raw ? readJson(pkgPath) : null;
-  if (!pkg?.vibe?.pristine) {
+  if (!pkg?.tooling?.pristine) {
     return { skipped: "already personalised", changed };
   }
 

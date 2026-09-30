@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// scripts/gate.mjs — `npm run gate`: the anti-slop check, then vibe.gates lint → typecheck → test → build.
+// scripts/gate.mjs — `npm run gate`: the anti-slop check, then tooling.gates lint → typecheck → test → build.
 // `npm run gate test` runs one gate; `npm run gate:list` lists them (npm swallows a leading `--list`).
 
 import { spawnSync } from "node:child_process";
@@ -28,7 +28,7 @@ export function gateOrder(gates) {
 /** Configured gates, falling back to on-the-fly stack detection. */
 export function loadGates() {
   const pkg = readJson(at("package.json"));
-  const configured = pkg?.vibe?.gates;
+  const configured = pkg?.tooling?.gates;
   if (configured && Object.keys(configured).length > 0) return { gates: configured, source: "package.json" };
   const found = detectResolved();
   if (!found.primary) return { gates: {}, source: "none" };
@@ -74,7 +74,7 @@ function fail(failed, code, reason, passed) {
   if (reason === "command not found") {
     process.stderr.write(
       "       This command came from the framework registry and may be unverified.\n" +
-        "       Correct it in package.json → `vibe.gates`; see docs/STACK.md.\n",
+        "       Correct it in package.json → `tooling.gates`; see docs/STACK.md.\n",
     );
   }
   if (passed.length) process.stderr.write(`       Already passed: ${passed.join(", ")}\n`);
@@ -114,7 +114,7 @@ function main(argv) {
     process.stderr.write(
       "[gate] no gates configured yet.\n" +
         "       Run `npm run stack:apply` to fill them in from the framework registry,\n" +
-        "       or write `vibe.gates` in package.json yourself. See docs/STACK.md.\n",
+        "       or write `tooling.gates` in package.json yourself. See docs/STACK.md.\n",
     );
     return 0;
   }

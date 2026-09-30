@@ -7,14 +7,14 @@ npm install          # activates the auto-version git hook (postinstall)
 npm run setup        # hooks → framework detection → agent docs → beads → dolt remote
 ```
 
-Setup detects your framework and writes three things for you: `package.json` → `vibe.gates`,
+Setup detects your framework and writes three things for you: `package.json` → `tooling.gates`,
 the `.gitignore` managed block, and `docs/STACK.md`. **Read `docs/STACK.md` first** — if it named
 the wrong framework, or a gate command is wrong, fix it now:
 
 ```bash
 npm run stack:detect            # what matched, and how strongly
 npm run stack:list              # every framework in the registry
-npm run stack:reapply           # re-derive vibe.gates from the registry (overwrites hand edits)
+npm run stack:reapply           # re-derive tooling.gates from the registry (overwrites hand edits)
 npm run gate:list               # exactly what `npm run gate` will run
 npm run gate                    # run it
 ```
@@ -23,7 +23,7 @@ If your framework is missing, add one entry to `scripts/stacks.json` (see the ex
 `README.md`) and run `npm run stack:validate`. No code change is needed — and please keep
 `"verified": false` until you have actually run the commands.
 
-> Agent-ready ships `vibe.gates` marked `"pristine": true` — those are the commands
+> Agent-ready ships `tooling.gates` marked `"pristine": true` — those are the commands
 > agent-ready uses to maintain itself. The first `npm run stack:apply` in a renamed project replaces
 > them with your framework's and drops the marker. After that they are yours: nothing overwrites
 > them again unless you ask (`npm run stack:reapply`).
@@ -33,7 +33,7 @@ Then fill the placeholders — search for `TODO:fill`:
 - [ ] `AGENTS.md` — project name · Project summary · Stack table · Layer responsibilities ·
       Naming conventions · Conventions · Commands · design-token pointer in the
       "No AI slop" rule
-- [ ] `package.json` → `vibe.slop.ignore` — globs for vendored or generated code the comment check
+- [ ] `package.json` → `tooling.slop.ignore` — globs for vendored or generated code the comment check
       should skip (`npm run slop` lists what it would flag today); `maxDocCommentLines` if your API
       docs (`/**`, `///`) need more than three lines
 - [ ] `CLAUDE.md` — project name only (everything else is imported from `AGENTS.md`; **do not copy

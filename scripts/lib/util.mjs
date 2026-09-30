@@ -166,13 +166,13 @@ function escapeRe(s) {
 }
 
 /**
- * Replace the body of a `>>> vibe:<name>` / `<<< vibe:<name>` managed block,
+ * Replace the body of a `>>> tooling:<name>` / `<<< tooling:<name>` managed block,
  * appending the block when absent. Everything outside the markers is preserved
  * verbatim, so regenerating never clobbers hand-written content.
  */
 export function upsertManagedBlock(text, name, body, comment = "#") {
-  const open = `${comment} >>> vibe:${name}`;
-  const close = `${comment} <<< vibe:${name}`;
+  const open = `${comment} >>> tooling:${name}`;
+  const close = `${comment} <<< tooling:${name}`;
   const block = [open, String(body).trimEnd(), close].filter(Boolean).join("\n");
   const re = new RegExp(`${escapeRe(open)}[\\s\\S]*?${escapeRe(close)}`, "m");
   const base = text ?? "";
