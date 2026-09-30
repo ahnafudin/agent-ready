@@ -1,31 +1,6 @@
 #!/usr/bin/env node
-// scripts/personalize.mjs — turn a pristine copy of agent-ready into THIS
-// project. Runs once, early in `npm run setup`.
-//
-// Every bug found by generating real apps from agent-ready had the same
-// shape: agent-ready's own scaffolding surviving into the project that was made from it.
-// The beads identity. The gates. The npm `test` script. And the four this file
-// fixes — the version, the README, the licence and the contribution guide.
-//
-//   version   a new project starts at 0.1.0, not at whatever release
-//             agent-ready itself had reached (0.2.x, and climbing)
-//   README    agent-ready's README describes agent-ready itself. Left in place, an
-//             agent opening the project reads "a project boilerplate … 70-entry
-//             framework registry" and concludes the project IS agent-ready.
-//             It moves to docs/TOOLING.md — still needed, since it documents
-//             the tooling — and a project README takes its place.
-//   LICENSE   agent-ready's MIT licence names agent-ready's author; left at
-//             the root it would claim the new project. MIT requires the notice
-//             to travel with the copied tooling, so it moves to
-//             docs/TOOLING-LICENSE, and the root is left for the owner's choice.
-//   CONTRIBUTING.md  explains how to contribute to agent-ready — noise in a
-//             project, and GitHub would show it on every new issue. Removed.
-//
-// Two conditions, both required, so this can never fire on a real project:
-//   - package.json no longer carries the placeholder name (someone renamed it)
-//   - `vibe.pristine` is still set (nothing has personalised it yet)
-// `scripts/stacks.mjs` clears that flag immediately afterwards in setup, when it
-// swaps agent-ready's gates for the detected framework's.
+// scripts/personalize.mjs — turns a pristine copy of agent-ready into this project, once, early in setup.
+// Fires only on a renamed package.json that still has `vibe.pristine` (stacks.mjs clears it next).
 
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -103,9 +78,8 @@ export function personalize({ root = ROOT } = {}) {
     if (writeIfChanged(pkgPath, next)) changed.push(`package.json (version → ${FRESH_VERSION})`);
   }
 
-  // 2. Keep agent-ready's README as tooling documentation, and give the project
-  //    a README about itself. Guarded by the marker: a README someone has
-  //    already written is never touched.
+  // 2. Left in place, agent-ready's README makes an agent think the project IS agent-ready.
+  //    Keep it as tooling docs; a README without the marker is never touched.
   const readmePath = join(root, "README.md");
   const readme = existsSync(readmePath) ? readFileSync(readmePath, "utf8") : "";
   if (readme.includes(OWN_README_MARKER)) {
@@ -115,8 +89,7 @@ export function personalize({ root = ROOT } = {}) {
     if (writeIfChanged(readmePath, projectReadme(pkg))) changed.push("README.md (now describes this project)");
   }
 
-  // 3. Keep agent-ready's licence with the tooling it covers, and leave the
-  //    root for the licence the owner picks for THIS project.
+  // 3. MIT's notice travels with the tooling it covers; the root is left for the owner's own licence.
   const licensePath = join(root, "LICENSE");
   const license = existsSync(licensePath) ? readFileSync(licensePath, "utf8") : "";
   if (OWN_LICENSE.test(license)) {
@@ -136,8 +109,7 @@ export function personalize({ root = ROOT } = {}) {
 }
 
 function main(argv = []) {
-  // It took no arguments at all, so anything typed at it disappeared without
-  // comment — including a `--force` somebody might reasonably expect to exist.
+  // Takes no flags, but refuses any typed so a guessed `--force` is not silently ignored.
   const { problems } = parseFlags(argv, { known: [] });
   if (problems.length) {
     write(`${problems.join("; ")} — personalize takes no flags`);

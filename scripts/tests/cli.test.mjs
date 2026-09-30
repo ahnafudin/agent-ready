@@ -1,13 +1,5 @@
-// Every CLI must refuse a flag it does not know.
-//
-// The unit tests for `parseFlags` prove the parser works; they cannot prove a
-// CLI actually calls it. That gap is the whole bug: each script tested its flags
-// with `argv.includes("--check")`, which ignores a typo and falls through to the
-// DEFAULT branch. Where the flag exists to make a command do LESS, the default
-// is the dangerous branch — `sync-agents.mjs --chek` turned "verify and write
-// nothing" into a rewrite that exited 0, so the lint gate calling it could not
-// have failed. This spawns each one for real.
-//
+// Guards that every CLI refuses an unknown flag, by spawning each one for real.
+// A typo must never fall through to the default branch, which is the dangerous one for a flag that does LESS.
 // A bogus flag is safe to run: refusal happens before any work.
 
 import assert from "node:assert/strict";

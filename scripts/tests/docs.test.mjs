@@ -1,10 +1,5 @@
-// Tests for the documented commands themselves.
-//
-// These exist because of a real trap: `npm run gate --list` does NOT list —
-// npm swallows a leading flag instead of forwarding it, so the agent that types
-// it gets a full gate run and no listing. Non-flag args (`npm run gate test`)
-// do pass through. Every command printed in a doc or a generated stub must be
-// one that actually works when copy-pasted, so that trap is pinned here.
+// Guards that every command printed in a doc or a generated stub works when copy-pasted.
+// Trap: `npm run gate --list` does NOT list; npm swallows a leading flag instead of forwarding it.
 
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
@@ -52,10 +47,8 @@ describe("npm script surface", () => {
   const NPM_OWN_FLAGS = ["--if-present", "--silent", "--workspace", "--workspaces", "--prefix", "--loglevel"];
 
   /**
-   * Lines where a flag meant for OUR script is placed where npm will eat it.
-   * A line containing an emphatic uppercase `NOT` is prose WARNING about the
-   * trap (in AGENTS.md and gate.mjs) rather than instructing anyone to use it —
-   * documenting the pitfall must stay allowed, or the guard bans its own fix.
+   * Lines where a flag meant for OUR script sits where npm will eat it.
+   * A line with an uppercase `NOT` is prose warning about the trap, so documenting it stays allowed.
    */
   function swallowedFlagLines(body) {
     return body.split("\n").filter((line) => {
@@ -116,9 +109,7 @@ describe("documented commands exist", () => {
 });
 
 describe("the README's honesty claim", () => {
-  // It states how many entries are verified. That number is the whole basis for
-  // trusting the registry, and it drifted from 49/21 to 64/6 in one session
-  // without anyone noticing — so it is asserted rather than maintained by hand.
+  // The verified count is the basis for trusting the registry, so it is asserted, not kept by hand.
   it("matches what stacks.json actually says", (t) => {
     // Only meaningful here: `personalize.mjs` replaces this README with the
     // project's own, so a derived copy has no such claim to check.
@@ -127,17 +118,13 @@ describe("the README's honesty claim", () => {
     const verified = stacks.filter((s) => s.verified !== false).length;
     const unverified = stacks.length - verified;
     const readme = readIfExists(at("README.md"));
-    // Plain substring, not a regex: the markdown emphasis around these numbers
-    // is full of asterisks, and escaping them through a template literal is how
-    // this assertion silently passed on nothing the first time.
+    // Plain substring, not a regex: escaping the markdown asterisks through a template literal matches nothing.
     if (unverified === 0) {
       assert.ok(
         readme.includes(`**On honesty:** all ${verified} entries are verified`),
         `README states a different verified count; the registry has ${verified}`,
       );
-      // With nothing left unverified the old "N is marked false" clause has no
-      // subject — and a leftover count reading `0 are marked` would be true only
-      // by accident. It must be gone, not merely correct.
+      // With nothing unverified the "N is marked false" clause must be gone, not read `0 are marked`.
       assert.doesNotMatch(
         readme,
         /[*][*][0-9]+ (is|are) marked/,
@@ -157,10 +144,7 @@ describe("the README's honesty claim", () => {
   });
 
   it("gets the registry's size and shape right too", (t) => {
-    // The honesty claim is not the only number in the README that can rot: the
-    // headline "70-entry framework registry (55 frameworks, 15 language bases)"
-    // is the first thing anyone reads, and nothing was checking it. Adding one
-    // entry would have quietly made all three wrong at once.
+    // The headline entry count and framework/base split all go stale when one entry is added.
     if (!isUnrenamed()) return t.skip("not agent-ready — its README was replaced");
     const stacks = loadRegistry();
     const frameworks = stacks.filter((s) => s.tier === "framework").length;
@@ -181,11 +165,7 @@ ${stacks.length - frameworks} language bases)`) ||
 });
 
 describe("the generated stack brief", () => {
-  // docs/STACK.md is GENERATED, committed, and read by agents — so it can drift
-  // from the package.json it describes without anything noticing. It had: the
-  // committed copy still advertised `npm run test --if-present` months after the
-  // tooling's own test gate moved to a script of its own (`test:tooling` now), so the file an agent
-  // reads to learn the gates contradicted the gates.
+  // docs/STACK.md is generated, committed and read by agents, so it can silently drift from the gates.
   it("is what the generator would write today", (t) => {
     if (!isUnrenamed()) return t.skip("not agent-ready — a project regenerates its own");
     const expected = renderDoc(detectResolved(), pkg.vibe.gates);

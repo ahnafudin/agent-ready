@@ -1,28 +1,7 @@
 #!/usr/bin/env node
-// scripts/install-hooks.mjs — make sure every hook agent-ready ships is the
-// one git actually runs. Idempotent and fail-soft: a non-git checkout, or a
-// machine without git, simply skips. Run by `postinstall` and exposed as
-// `npm run hooks:install`.
-//
-// Hooks shipped in .githooks/:
-//   post-commit  folds a conventional-commit version bump into that commit
-//   commit-msg   strips AI-agent attribution trailers, whichever agent wrote them
-//
-// Safety guards (each closes a real, reproduced failure):
-//   - dubious ownership: git refuses EVERY command with exit 128 when the repo
-//     is owned by another user/SID (common on Windows after a drive move or a
-//     reinstall). Reporting that as "not a git work tree" would send someone to
-//     `git init` on top of an existing repo — so name the real cause instead.
-//   - toplevel check: when this folder sits INSIDE another repository (zip/degit
-//     copy into a monorepo without its own .git), a naive install would write
-//     core.hooksPath into the PARENT repo and silently disable all of its hooks.
-//   - foreign hooksPath: never clobber an existing hook manager (husky, lefthook…).
-//   - beads: `bd init` moves core.hooksPath to `.beads/hooks` and chains the
-//     hooks that existed at the time by COPYING them. That copy is what git then
-//     runs, so it goes stale the moment .githooks/ is edited — and a hook added
-//     LATER never arrives there at all. Both are handled below.
-//   - never overwrite a hook there that is not ours: bd writes its own
-//     pre-commit, post-merge, pre-push and prepare-commit-msg.
+// scripts/install-hooks.mjs — makes every hook in .githooks/ the one git actually runs; idempotent, fail-soft.
+// `bd init` runs hooks from COPIES in .beads/hooks, which go stale, so those are kept in sync.
+// Never touches a foreign hook manager, a parent repo, or a hook that is not ours.
 
 import { chmodSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -34,12 +13,7 @@ const MARKER = "vibe:hook";
 
 const note = (msg) => write(msg, "[hooks] ");
 
-// `--check` verifies without writing: it is the lint gate's job to notice that
-// the copy git ACTUALLY runs has fallen behind .githooks/. That is not
-// hypothetical — the commit-msg hook was fixed here to stop matching agents by
-// product name (which deleted a human co-author whose address contained "amp"),
-// while the copy beads owns went on running the old one for days. The fix
-// existed, was committed, was tested, and was not the file being executed.
+// `--check` writes nothing; it fails the lint gate when the copy git runs has fallen behind .githooks/.
 const { flags, problems } = parseFlags(process.argv.slice(2), { known: ["--check"] });
 if (problems.length) {
   note(problems.join("; "));
@@ -123,9 +97,7 @@ if (hooksPath === ".githooks") {
   note("to enable agent-ready's hooks manually: git config core.hooksPath .githooks");
 } else {
   if (CHECK) {
-    // Not installed at all is an environment fact, not drift: a CI checkout that
-    // never ran postinstall is in this state and must not fail the gate. The
-    // condition worth failing on is a hook git DOES run having fallen behind.
+    // Not installed is not drift: a CI checkout that never ran postinstall must pass the gate.
     note("hooks are not installed here (core.hooksPath unset) — nothing to compare");
   } else {
     const set = git(["config", "core.hooksPath", ".githooks"]);

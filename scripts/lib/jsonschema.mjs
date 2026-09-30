@@ -1,13 +1,5 @@
-// scripts/lib/jsonschema.mjs — a deliberately tiny JSON-Schema validator: just
-// the subset scripts/stacks.schema.json uses. It exists so the schema is
-// ENFORCED (by `npm run gate` and by `stacks.mjs validate`) rather than being a
-// decorative document — a malformed framework entry must fail loudly, not
-// silently mis-detect someone's project later.
-//
-// Supported: $ref (local), type, enum, const, oneOf, required, properties,
-// additionalProperties, propertyNames-free patterns, items, minItems, maxItems,
-// minProperties, maxProperties, minLength, pattern.
-// Anything else in a schema is ignored rather than guessed at.
+// scripts/lib/jsonschema.mjs — a tiny JSON-Schema validator for the subset scripts/stacks.schema.json uses.
+// Unsupported keywords are ignored rather than guessed at.
 
 function typeOf(value) {
   if (value === null) return "null";

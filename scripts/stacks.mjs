@@ -1,20 +1,6 @@
 #!/usr/bin/env node
-// scripts/stacks.mjs — the framework registry: load, resolve `extends`, detect
-// what THIS repo is, and project the answer onto three places:
-//
-//   package.json → `vibe.gates`   (what `npm run gate` runs)
-//   .gitignore   → managed block  (framework build artefacts)
-//   docs/STACK.md                 (the generated brief every agent reads)
-//
-//   node scripts/stacks.mjs detect [dir]  rank the stacks that match a repo
-//   node scripts/stacks.mjs list          every registry entry
-//   node scripts/stacks.mjs show <id>     one entry, with `extends` resolved
-//   node scripts/stacks.mjs doc           print docs/STACK.md to stdout
-//   node scripts/stacks.mjs apply [--force]   write all three targets
-//
-// Detection is DATA-driven: adding a framework is a row in stacks.json and must
-// never require touching this file. `scripts/version.mjs` deliberately does NOT
-// read the registry — versioning must keep working even if a stack entry is wrong.
+// scripts/stacks.mjs — the framework registry: detect this repo's stack and write its gates, ignores and docs/STACK.md.
+// Detection is data-driven: adding a framework is a row in stacks.json, never a change here.
 
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve as resolvePath } from "node:path";
@@ -43,10 +29,8 @@ export function byId(stacks, id) {
 }
 
 /**
- * Structural check against stacks.schema.json plus the invariants a schema
- * cannot express: unique ids, resolvable/acyclic `extends`, and at least one
- * detection signal (an entry that can never match is dead weight that reads as
- * support agent-ready does not actually have).
+ * stacks.schema.json plus what a schema cannot express: unique ids, acyclic resolvable `extends`,
+ * and at least one detection signal (an entry that can never match only pretends to be supported).
  */
 export function validateRegistry(path = REGISTRY, schemaPath = at("scripts", "stacks.schema.json")) {
   const doc = readJson(path);
@@ -155,11 +139,8 @@ function signalHits(signal, ctx) {
 }
 
 /**
- * Rank every entry whose markers are present. `all` signals must ALL hit (this
- * is what stops `react-vite` from claiming every React-based framework); `any`
- * needs one. Score = number of satisfied signals, so the more specific entry —
- * Next.js matching both `next.config.*` and the `next` dep — outranks the
- * looser one without any hand-tuned priority table.
+ * Rank every entry whose markers are present: `all` signals must all hit, `any` needs one.
+ * Score counts satisfied signals, so a more specific entry outranks a looser one with no priority table.
  */
 export function detect(root = ROOT, stacks = loadRegistry()) {
   const ctx = { root, deps: depSet(root) };
@@ -334,13 +315,8 @@ export function apply({ force = false, root = ROOT } = {}) {
   const raw = existsSync(pkgPath) ? readFileSync(pkgPath, "utf8") : null;
   const pkg = raw ? JSON.parse(raw) : null;
   const hadGates = Boolean(pkg?.vibe?.gates && Object.keys(pkg.vibe.gates).length > 0);
-  // Agent-ready ships gates for maintaining ITSELF (validate the registry, check
-  // the generated agent files). Copied into a new project those are nonsense —
-  // and because they are non-empty, "never clobber a hand-tuned block" would
-  // preserve them forever: an Electron app would report a green gate having
-  // never once run its build. `pristine` marks them as scaffolding, to be
-  // replaced the first time a RENAMED project detects its real stack. In
-  // agent-ready itself (still named `my-project`) they are kept.
+  // `pristine` marks the template's own gates as scaffolding: a renamed project replaces them
+  // with its detected stack, where "never clobber" would otherwise keep them forever.
   const pristine = Boolean(pkg?.vibe?.pristine) && !isUnrenamed(root);
   const replaceGates = !hadGates || pristine || force;
   if (pkg && found.primary && replaceGates) {
@@ -352,9 +328,7 @@ export function apply({ force = false, root = ROOT } = {}) {
     }
   }
 
-  // What `npm run gate` will ACTUALLY run: a hand-tuned block in package.json
-  // wins over the registry defaults. The generated doc must show this, not the
-  // registry's opinion — otherwise it documents commands nobody runs.
+  // The doc shows what `npm run gate` actually runs: a hand-tuned block beats the registry defaults.
   const gates = replaceGates ? detected : pkg.vibe.gates;
 
   // 2. .gitignore → managed block of framework artefacts
@@ -422,11 +396,7 @@ function main(argv) {
       return;
     }
     case "apply": {
-      // `apply()` has always taken a root; this CLI just never passed one, so
-      // `stacks.mjs apply ../my-app` silently configured agent-ready itself instead —
-      // the one command here that writes files, aimed at the wrong project.
-      // `detect` already accepted a directory, which is exactly why the omission
-      // stayed invisible: the pair looked symmetrical.
+      // Pass the directory through: without it, `apply ../my-app` would rewrite this repo instead.
       const { positional, flags, problems } = parseFlags(argv.slice(1), { known: ["--force"] });
       if (problems.length) {
         process.stderr.write(`[stack] ${problems.join("; ")}\n`);
@@ -455,9 +425,8 @@ function main(argv) {
   }
 }
 
-// Run the CLI only when invoked directly, so tests can import the pure helpers.
-// `pathToFileURL` (not hand-built `file://` strings) — a Windows argv path like
-// `D:\...` would otherwise parse its drive letter as a URL host.
+// Run the CLI only when invoked directly. `pathToFileURL`, since a hand-built `file://` URL
+// parses a Windows drive letter as the host.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main(process.argv.slice(2));
 }

@@ -1,7 +1,5 @@
-// Tests for scripts/lib/util.mjs — small helpers, but two of them are
-// load-bearing: the managed-block editor (regenerating must never eat a user's
-// hand-written lines) and the dubious-ownership detector (whose whole purpose is
-// to stop a misleading "not a git repository → run git init" suggestion).
+// Guards scripts/lib/util.mjs. Load-bearing: the managed-block editor never eats hand-written lines,
+// and the dubious-ownership detector stops a misleading "run git init" suggestion.
 
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -188,9 +186,7 @@ describe("hasShellMetachars / runTool", () => {
   });
 
   it("still runs an ordinary command with plain arguments", () => {
-    // Deliberately simple args: the guard is strict by design, and a `-e` script
-    // full of quotes and parens is exactly what it is supposed to refuse. Every
-    // real caller (`bd version`, `bd dolt remote list`, …) passes plain tokens.
+    // Plain args on purpose: the guard is strict and must refuse a `-e` script full of quotes and parens.
     const r = runTool(process.execPath, ["--version"]);
     assert.equal(r.ok, true, r.out);
     assert.match(r.out, /^v\d+\./);
@@ -221,20 +217,14 @@ describe("isUnrenamed", () => {
   });
 
   it("guards THIS repo — agent-ready must never ship a beads identity", (t) => {
-    // Only meaningful in agent-ready. A project made FROM it has a real name,
-    // and this suite travels with the project — asserting unconditionally made
-    // every derived project's very first `npm run gate` red.
+    // Only meaningful in agent-ready: a derived project has a real name, and this suite travels with it.
     if (!isUnrenamed()) return t.skip("not agent-ready — this project has been renamed");
     assert.equal(isUnrenamed(), true, "package.json here must keep the placeholder name");
   });
 });
 
 describe("parseFlags", () => {
-  // Every CLI here used to test flags with `argv.includes("--check")`, which
-  // ignores a typo and falls through to the DEFAULT branch. When the flag exists
-  // to make a command do less, that is a hazard rather than an annoyance:
-  // `sync-agents.mjs --chek` turned "verify, write nothing" into a full rewrite
-  // that exited 0, so the lint gate calling it could never have failed.
+  // A flag typo must never fall through to the default branch, the dangerous one for a flag that does less.
   it("separates positional arguments from flags", () => {
     const r = parseFlags(["dir", "id", "--run"], { known: ["--run"] });
     assert.deepEqual(r.positional, ["dir", "id"]);

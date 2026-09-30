@@ -1,16 +1,5 @@
-// The structural guard.
-//
-// Six bugs in agent-ready have had one shape: scaffolding that belongs to
-// agent-ready itself surviving into a project made from it. The beads identity. The
-// quality gates. The npm `test` script. The version. The README. Each was found
-// only by generating a real app (Electron, then Tauri) and running it — never by
-// the unit tests, because every one of them is invisible from inside this repo.
-//
-// So the simulation is automated here. This builds a copy of exactly what a
-// fresh copy holds (the git-tracked files, nothing else), renames it,
-// runs the bootstrap steps a new project would run, and then runs THIS ENTIRE
-// TEST SUITE inside that copy. Any future leak of the same family fails here
-// instead of in somebody's new repo.
+// Guards that a project made from agent-ready inherits none of agent-ready's own scaffolding.
+// Copies the tracked files, renames and bootstraps the copy, then runs this whole suite inside it.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -84,7 +73,6 @@ describe("a project made from agent-ready", { skip: INSIDE && "running inside th
   });
 
   it("starts its version history at 0.1.0, not at agent-ready's release", () => {
-    // Found the hard way: generated apps began life at 0.2.2 and 0.2.3.
     assert.equal(pkg().version, "0.1.0");
   });
 
@@ -142,10 +130,7 @@ describe("a project made from agent-ready", { skip: INSIDE && "running inside th
   });
 
   it("inherits the whole attribution defence, not just part of it", () => {
-    // The reason this is asserted rather than assumed: a bot in the contributor
-    // list can only be removed by rewriting published history, so a project that
-    // inherits agent-ready must arrive already protected — not protected once
-    // somebody remembers to run a command.
+    // A bot in the contributor list only leaves by rewriting published history, so this must arrive installed.
     for (const f of [
       ".githooks/commit-msg", // strips it, once hooks are installed
       ".github/workflows/attribution.yml", // catches it when they are not
@@ -166,13 +151,8 @@ describe("a project made from agent-ready", { skip: INSIDE && "running inside th
   });
 
   it("passes the whole tooling suite — the check that would have caught all six", () => {
-    // Two of these tests once failed by construction in any repo that is not
-    // agent-ready, so every generated project opened with a red gate.
-    // TAP, not the default reporter: `# pass N` / `# fail N` are stable to
-    // assert on, where the spec reporter's output is decorated and colourised.
-    // Explicit runner, not a glob: this spawn has no shell, and Node only
-    // learned to expand globs itself in v21 — the glob form passed locally and
-    // broke CI on Node 20.
+    // TAP because its `# pass N` / `# fail N` lines are stable to assert on.
+    // run.mjs, not a glob: this spawn has no shell, and Node 20 cannot expand globs itself.
     const r = node(
       [join(dir, "scripts", "tests", "run.mjs"), "--test-reporter=tap"],
       dir,

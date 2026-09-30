@@ -1,12 +1,5 @@
-// scripts/lib/glob.mjs — the tiny path expander both the registry and the
-// version syncer need.
-//
-// `*` is allowed in ANY segment but never crosses a `/`. That matters: the Ktor
-// entry matched nothing at all in a real Gradle project because the pattern
-// could only look at the repository root, while `gradle init` puts the build
-// file in `app/`. Detection and version syncing had separate expanders, one of
-// which handled a middle-segment wildcard and one of which did not — so they are
-// one function now.
+// scripts/lib/glob.mjs — the one path expander for stack detection and version syncing.
+// `*` works in any segment (build files often sit in `app/`) but never crosses a `/`.
 
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";

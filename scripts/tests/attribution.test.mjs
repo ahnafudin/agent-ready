@@ -1,14 +1,5 @@
-// The rule that keeps other accounts out of the contributor list.
-//
-// It is enforced in two places — the commit-msg hook (prevents) and
-// check-attribution.mjs in CI (detects) — because neither covers the other's
-// blind spot: the hook cannot run before it is installed, and CI cannot stop a
-// commit being written. Two enforcers means one risk: they drift, and the
-// detector stops recognising what the preventer stopped stripping.
-//
-// So the rule is not copied. check-attribution.mjs reads the hook's actual
-// PATTERN line, and these tests pin that the extraction works and that both
-// agree — by running the real hook, not a description of it.
+// Guards the attribution rule: the commit-msg hook strips trailers and CI detects them.
+// CI reads the hook's PATTERN line rather than a copy; these tests run the real hook to prove both agree.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -25,12 +16,8 @@ const RE = attributionRe(hookRule(HOOK));
 const trash = [];
 after(() => trash.forEach((d) => rmSync(d, { recursive: true, force: true })));
 
-// Every one of these goes. The co-author lines are the point: this project's
-// commits have exactly one author, so an agent's trailer and a person's are
-// removed alike. Telling them apart was tried twice and failed twice — by name
-// ("Amp" matches inside "example.com", which deleted a real person) and by bot
-// address (a list that must grow with every new agent, where one missed entry
-// is permanent).
+// All of these go: commits have one author, so a person's co-author line goes like an agent's.
+// Never tell them apart by name ("Amp" matches inside "example.com") or by a bot list (one miss is permanent).
 const STRIPPED = [
   "Co-authored-by: Some Agent <noreply@anthropic.com>",
   "Co-Authored-By: Another Agent <agent@cursor.com>",
@@ -81,10 +68,7 @@ describe("the attribution rule", () => {
 });
 
 describe("hook and CI check agree", () => {
-  // The one that matters: run the REAL hook over a message and assert it removed
-  // exactly the lines the CI rule flags. If either side is edited alone this
-  // fails, rather than letting a trailer slip past the detector or a good line
-  // get eaten by the stripper.
+  // Runs the REAL hook and asserts it removes exactly the lines CI flags, so neither side drifts alone.
   it("strip and detect are the same set of lines", (t) => {
     const sh = spawnSync("sh", ["--version"], { encoding: "utf8" });
     if (sh.error) return t.skip("no POSIX sh here — the hook cannot be executed");

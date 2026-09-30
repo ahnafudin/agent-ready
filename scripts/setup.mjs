@@ -1,28 +1,6 @@
 #!/usr/bin/env node
-// scripts/setup.mjs — one-shot project bootstrap. Idempotent (safe to re-run)
-// and fail-soft, but the ORDER is deliberate:
-//
-//   1. git hooks first (core.hooksPath=.githooks) — so a later `bd init`
-//      CHAINS the auto-version hook instead of orphaning it
-//   2. personalise a pristine copy — reset the version to 0.1.0 and give the
-//      project its own README (agent-ready's moves to docs/TOOLING.md);
-//      keyed off `vibe.pristine`, which step 3 then clears
-//   3. stack detection — read the framework markers, fill package.json's
-//      `vibe.gates`, the .gitignore managed block and docs/STACK.md
-//   4. agent doc pointers — regenerate the per-tool stubs from AGENTS.md
-//   5. beads workspace — `bd bootstrap` when a committed .beads config exists
-//      (second machine / fresh clone), `bd init` only on a brand-new project,
-//      and NEVER on a dirty index (`bd init` auto-commits every staged file —
-//      a real data-loss footgun)
-//   6. Claude Code hooks — agent-ready ships its own GUARDED priming hook, so
-//      this step trusts .claude/settings.json rather than `bd setup claude
-//      --check` (which matches a literal `bd prime` and would have us reinstall
-//      bd's unguarded version on every run)
-//   7. Dolt sync remote = the git origin (lives in the LOCAL beads DB, not in
-//      git, so this step repeats on every new machine)
-//
-// Steps 2–4 write only unstaged changes, so they cannot be swept into `bd
-// init`'s auto-commit; and a missing `bd` skips 5–7 without skipping them.
+// scripts/setup.mjs — idempotent, fail-soft project bootstrap. Order matters: hooks go first so
+// `bd init` chains them, and steps 2–4 leave changes unstaged because `bd init` commits the index.
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -45,8 +23,7 @@ function step(msg) {
 }
 const note = (msg) => write(msg, "  ");
 
-/** Show what a sub-script actually said. Our scripts report on stderr, so a
- *  wrapper that printed only stdout would flatten every step to "done". */
+/** Show what a sub-script said; our scripts report on stderr, not stdout. */
 function relay(result, fallback = "done") {
   const text = [result.err, result.ok ? "" : result.out].filter(Boolean).join("\n").trim();
   for (const line of (text || fallback).split(/\r?\n/)) note(line);
@@ -55,16 +32,11 @@ function relay(result, fallback = "done") {
 /** bd may be a Windows shim; runTool knows how to launch it. */
 const bd = (...args) => runTool("bd", args);
 
-// 0. must be a git work tree, and THIS folder must be its toplevel — otherwise
-// every following step (hooksPath, bd init, dolt remote) would act on a PARENT
-// repository (zip/degit copies nested in a monorepo hit this).
+// 0. This folder must be the git toplevel, or every later step acts on a parent repository.
 const toplevel = git(["rev-parse", "--show-toplevel"]);
 if (!toplevel.ok) {
   if (toplevel.dubious) {
-    // Do NOT say "not a git repository" here: the repo exists, git is just
-    // refusing to touch it because it is owned by another account. Someone who
-    // followed a `git init` suggestion would scaffold a second repo over a real
-    // one — so print the actual remedy.
+    // Never suggest `git init` here: the repo exists, and a second one would be scaffolded over it.
     step("git refuses to read this repository: it is owned by a different user account.");
     note("The repo is fine — this is an ownership check, not a missing .git. Run:");
     note(`  ${safeDirectoryHint()}`);
@@ -80,7 +52,7 @@ if (norm(toplevel.out) !== norm(ROOT)) {
   process.exit(1);
 }
 
-// 2. git hooks (auto-version)
+// 1. git hooks (auto-version)
 step("1/7 git hooks (auto-version)");
 relay(tryRun(process.execPath, [at("scripts", "install-hooks.mjs")]));
 
@@ -108,21 +80,14 @@ if (!bdVersion.ok) {
   note("Avoid CGO-less `go install` builds — embedded Dolt refuses to open with them.");
   note("Then re-run `npm run setup`.");
 } else if (isUnrenamed()) {
-  // `bd init` bakes this project's identity into .beads/ — the issue prefix, a
-  // project_id UUID and the Dolt sync remote — and then COMMITS it. Run on a
-  // copy that is still called "my-project" and every downstream user of that
-  // repo inherits it: their `bd dolt push` would target somebody else's remote.
-  // Refusing here also enforces what SETUP.md already advises — rename first,
-  // or every issue you ever file carries the placeholder prefix.
+  // `bd init` commits the project identity; on the placeholder name every copy would inherit it.
   note(`package.json is still named "${PLACEHOLDER_NAME}" — skipping \`bd init\` on purpose.`);
   note("bd bakes the project name into the issue prefix and commits .beads/ (identity +");
   note("sync remote), so initializing before renaming would ship this workspace to every");
   note("copy of the repo. Rename the project, then re-run `npm run setup`.");
 } else {
   note(bdVersion.out);
-  // `bd where` walks UP ancestor directories, so a parent workspace would match
-  // a naive check and silently hijack this project's issues — require the
-  // reported workspace to be exactly OURS before skipping init.
+  // `bd where` walks up ancestor directories, so the reported workspace must be exactly ours.
   const where = bd("where");
   const reportedWs = where.ok ? (where.out.split(/\r?\n/)[0] ?? "").trim() : "";
   const ownWs = at(".beads");
@@ -165,15 +130,8 @@ if (!bdVersion.ok) {
   beadsReady = true;
 }
 
-// 6. Claude Code hooks
-//
-// Agent-ready ships its OWN priming hook — `node scripts/bd-prime.mjs`, which
-// stays silent when bd is absent instead of putting an error in every session's
-// context. `bd setup claude --check` looks for a literal `bd prime` command, so
-// it reports "✗ No hooks installed" against our wrapper no matter what. Asking
-// bd would therefore reinstall its unguarded version on EVERY run and quietly
-// undo the wrapper — so check our own settings file, and call bd only when the
-// wrapper is genuinely missing.
+// 6. Claude Code hooks. Check our own settings, not `bd setup claude --check`: it only matches
+// a literal `bd prime`, so trusting it would replace the guarded wrapper on every run.
 step("6/7 Claude Code integration");
 const settings = readJson(at(".claude", "settings.json"));
 const wrapperInstalled = JSON.stringify(settings?.hooks ?? {}).includes("bd-prime.mjs");

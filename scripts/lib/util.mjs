@@ -1,6 +1,4 @@
-// scripts/lib/util.mjs — helpers shared by setup.mjs, install-hooks.mjs,
-// stacks.mjs, gate.mjs and sync-agents.mjs. Extracted because the repo rule is
-// explicit: anything used from 2+ places becomes a shared util.
+// scripts/lib/util.mjs — helpers shared by the repo's scripts.
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -11,18 +9,10 @@ import { fileURLToPath } from "node:url";
 export const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), "..", ".."));
 
 /**
- * Run a command, never throw.
- *
- * `out` is stdout ONLY on success — callers such as "read the git remote URL"
- * depend on that being clean. `err` is stderr, kept separately so a caller can
- * SHOW it: most of our own scripts report progress on stderr, and a wrapper that
- * only forwarded stdout would reduce every step of `npm run setup` to "done".
- * On failure `out` carries both streams, because there the message is the point.
+ * Run a command, never throw. On success `out` is clean stdout and `err` is stderr
+ * (where our scripts report progress); on failure `out` carries both streams.
  */
 export function tryRun(cmd, args = [], opts = {}) {
-  // spawnSync, not execFileSync: the latter returns stdout ONLY, discarding
-  // stderr on success — which is where our own scripts report everything they
-  // did, so `npm run setup` printed a bare "done" for each step.
   const r = spawnSync(cmd, args, { cwd: ROOT, encoding: "utf8", ...opts });
   const out = String(r.stdout ?? "").trim();
   const err = String(r.stderr ?? "").trim();
@@ -32,33 +22,17 @@ export function tryRun(cmd, args = [], opts = {}) {
   return { ok: false, out: merged || `exited with code ${r.status}`, err };
 }
 
-/**
- * Windows needs a shell to launch anything that is not a real .exe — npm-installed
- * CLIs (bd among them) are `.cmd`/shell shims, and `execFileSync` without a shell
- * fails them with ENOENT. Without this, a Windows machine with beads installed is
- * told "bd not found" and silently skips the entire issue-tracker setup.
- */
+/** Windows needs a shell to launch npm-installed `.cmd` shims (bd among them); without one they fail with ENOENT. */
 export const NEEDS_SHELL = process.platform === "win32";
 
-/**
- * Characters that stop being literal once a command line goes through a shell.
- * `NEEDS_SHELL` means arguments are concatenated, not escaped (Node's DEP0190),
- * so any argument taken from outside — a git remote URL, say — is checked with
- * this before it is passed along, and refused rather than guessed at.
- */
+/** Characters a shell would reinterpret; under `NEEDS_SHELL` arguments are concatenated unescaped (DEP0190). */
 export function hasShellMetachars(value) {
   return /["'`$&|;<>^%\r\n()]/.test(String(value ?? ""));
 }
 
 /**
- * Run an external CLI that may be a Windows shim (see `NEEDS_SHELL`).
- *
- * On POSIX arguments never touch a shell at all.
- * On Windows a shell is unavoidable, and passing an args ARRAY alongside
- * `shell: true` is deprecated (DEP0190) exactly because those arguments are
- * concatenated unescaped. So the command line is built here instead: an
- * argument a shell would reinterpret is REFUSED rather than quoted-and-hoped,
- * and only whitespace is handled by quoting.
+ * Run an external CLI that may be a Windows shim (see `NEEDS_SHELL`). On Windows an
+ * argument a shell would reinterpret is refused, not quoted; only whitespace is quoted.
  */
 export function runTool(cmd, args = []) {
   if (!NEEDS_SHELL) return tryRun(cmd, args);
@@ -70,9 +44,7 @@ export function runTool(cmd, args = []) {
       err: "",
     };
   }
-  // The COMMAND needs quoting as much as the arguments do: on Windows a tool
-  // routinely lives under `C:\Program Files\…`, and an unquoted path is split at
-  // the space ("'C:\Program' is not recognized").
+  // Quote the command too: a tool under `C:\Program Files\…` is split at the space.
   const quote = (v) => (/\s/.test(v) ? `"${v}"` : v);
   return tryRun([quote(cmd), ...args.map(quote)].join(" "), undefined, { shell: true });
 }
@@ -85,11 +57,8 @@ export function norm(p) {
 }
 
 /**
- * Git's "dubious ownership" refusal (repo owned by another SID/uid — routine on
- * Windows after a drive move, a reinstall, or a copy between user accounts).
- * It makes EVERY git command exit 128, so a naive caller concludes "not a git
- * repository" and may advise `git init` — which would scaffold a second repo on
- * top of a real one. Detect it and hand back the exact fix instead.
+ * Git's "dubious ownership" refusal: every git command exits 128, which must not be
+ * mistaken for "not a git repository" (advising `git init` would nest a second repo).
  */
 export function dubiousOwnership(out) {
   return /detected dubious ownership/i.test(String(out ?? ""));
@@ -100,11 +69,7 @@ export function safeDirectoryHint(root = ROOT) {
   return `git config --global --add safe.directory "${resolve(root).split("\\").join("/")}"`;
 }
 
-/**
- * `git <args>` from the repo root. Returns `{ ok, out, dubious }`; `dubious` is
- * true when the failure was the ownership refusal above, so callers can print
- * the real cause rather than a misleading one.
- */
+/** `git <args>` from the repo root; `dubious` is true when the failure was the ownership refusal. */
 export function git(args) {
   const r = tryRun("git", args);
   return { ...r, dubious: !r.ok && dubiousOwnership(r.out) };
@@ -116,28 +81,16 @@ export function at(...parts) {
 }
 
 /**
- * The directory git reads hooks from, for a `core.hooksPath` value: the value
- * itself when absolute, else relative to this working tree. `bd init` writes an
- * ABSOLUTE path into the shared config, so in a linked worktree git keeps running
- * the main checkout's hooks — reading `<worktree>/.beads/hooks` instead checks a
- * folder that does not exist there, and fails every gate run in a worktree.
+ * The directory git reads hooks from for a `core.hooksPath` value. An absolute value
+ * (as `bd init` writes) points every linked worktree at the main checkout's hooks.
  */
 export function hooksDirFor(hooksPath, root = ROOT) {
   return isAbsolute(hooksPath) ? hooksPath : join(root, hooksPath);
 }
 
 /**
- * Split argv into positional arguments and flags, REFUSING any flag not listed.
- *
- * Every CLI here tested flags with `argv.includes("--check")`, which silently
- * ignores a mistyped flag and falls through to the default branch. For a flag
- * whose whole job is to make a command do LESS, that is dangerous rather than
- * merely untidy: `sync-agents.mjs --chek` turned "verify and write nothing" into
- * a full rewrite that exited 0, so a drifted pointer file was repaired instead
- * of reported — and the lint gate that calls it could never have failed.
- *
- * `valued` names flags taking a value, accepted as `--f=v` or `--f v`.
- * Returns `problems` rather than throwing: each CLI prints its own usage.
+ * Split argv into positionals and flags, refusing unknown flags: a mistyped `--check`
+ * must not fall through to a full rewrite. `valued` flags take `--f=v` or `--f v`.
  */
 export function parseFlags(argv, { known = [], valued = [] } = {}) {
   const all = [...known, ...valued];
@@ -181,24 +134,14 @@ export function readIfExists(path) {
 /** Write only when the content actually changed; returns whether it wrote. */
 export function writeIfChanged(path, next) {
   if (readIfExists(path) === next) return false;
-  // Create the parent first. `stacks.mjs apply` writes docs/STACK.md, and a
-  // project that has no docs/ yet — which is most of them, on the first run —
-  // got an ENOENT stack trace AFTER package.json had already been rewritten:
-  // half-applied, and loud in the wrong place. This only ever worked because
-  // the one directory it was aimed at, agent-ready, already had docs/.
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, next);
   return true;
 }
 
 /**
- * The name `package.json` ships with in agent-ready.
- *
- * While it is still this, the repo is an unpersonalised copy: `bd init` must not
- * run, because it bakes the project name into the issue prefix and COMMITS
- * .beads/ (a project_id UUID and the Dolt sync remote). Shipped from agent-ready,
- * every downstream copy would inherit that identity and push issues at somebody
- * else's remote.
+ * The name `package.json` ships with. While it is still this, `bd init` must not run:
+ * it commits a project identity every downstream copy would inherit.
  */
 export const PLACEHOLDER_NAME = "my-project";
 
@@ -239,37 +182,16 @@ export function upsertManagedBlock(text, name, body, comment = "#") {
 }
 
 /**
- * Marker pairs other tools use to fence off a region of a markdown file they
- * manage. Both forms are common; bd writes the second one into this repo:
- *
- *   `<!-- toolname:start -->` … `<!-- toolname:end -->`
- *   `<!-- BEGIN BEADS INTEGRATION -->` … `<!-- END … -->`
- *
- * The name is captured and back-referenced, so an opening marker only closes
- * against its own end tag — two tools' blocks in one file stay separate.
- *
- * Each marker must sit ALONE on its line. That is not cosmetic. Without it, a
- * single line of prose naming both markers reads as a real block — which is how
- * a banner that documented this feature by showing the syntax got preserved as
- * four "blocks" into six generated files, and then stayed there: the file was
- * self-consistent, so `--check` reported it current for ever. A preservation
- * rule that cannot see its own damage is worse than no preservation at all.
+ * Marker pairs other tools fence their markdown regions with (`name:start`/`:end`,
+ * `BEGIN X`/`END X`). Each marker must sit alone on its line, or prose that merely
+ * shows the syntax is read as a block.
  */
 const FOREIGN_BLOCK_PATTERNS = [
   /^[ \t]*<!--[ \t]*([A-Za-z0-9_.-]+):start[ \t]*-->[ \t]*$[\s\S]*?^[ \t]*<!--[ \t]*\1:end[ \t]*-->[ \t]*$/gm,
   /^[ \t]*<!--[ \t]*BEGIN[ \t]+([A-Za-z0-9_.\- ]+?)[ \t]*-->[ \t]*$[\s\S]*?^[ \t]*<!--[ \t]*END[ \t]+\1[ \t]*-->[ \t]*$/gm,
 ];
 
-/**
- * Regions of `text` that belong to another tool, in the order they appear.
- *
- * This exists because two generators can own the same file. `agents:sync`
- * rewrites its pointer files wholesale, so anything another installer had
- * written into one was silently deleted — and until it was deleted, the lint
- * gate failed, because the file no longer matched what the generator produces.
- * Installing a second agent-rules tool therefore broke `npm run gate`, and the
- * fix the error suggested destroyed the other tool's work.
- */
+/** Regions of `text` another tool owns, in order, so a wholesale rewrite can keep them. */
 export function foreignBlocks(text) {
   if (!text) return [];
   const found = [];
@@ -279,18 +201,9 @@ export function foreignBlocks(text) {
   return found.sort((a, b) => a.index - b.index).map(({ name, text }) => ({ name, text }));
 }
 
-/**
- * Generated content plus the blocks another tool owns, appended verbatim.
- *
- * With no foreign blocks the output is the generated text unchanged, so files
- * that nobody else has touched stay byte-identical and never churn. The result
- * is idempotent: re-reading it finds the same blocks and rebuilds the same file.
- */
+/** Generated content plus the foreign blocks, appended verbatim; idempotent, and unchanged when there are none. */
 export function withForeignBlocks(generated, blocks) {
-  // A block the generator itself emits is not foreign. Without this, prose in
-  // the generated text that merely SHOWS the marker syntax is read back as a
-  // real block and appended again on every run — the file grew by three lines
-  // each time `agents:sync` ran. Caught by asserting the second run is a no-op.
+  // A block the generator itself emits is not foreign, or every run appends it again.
   const foreign = blocks.filter((b) => !generated.includes(b.text));
   if (!foreign.length) return generated;
   return [

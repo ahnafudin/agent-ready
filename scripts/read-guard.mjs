@@ -1,23 +1,6 @@
 #!/usr/bin/env node
-// scripts/read-guard.mjs — a Claude Code PreToolUse hook that refuses an
-// unbounded Read of a long file.
-//
-// Why this exists: a tool result stays in the agent's context for the rest of
-// the session — nothing but compaction takes it back out. Measured over 93
-// sessions of one real project, results over 5,000 characters were 7.5% of the
-// tool calls and 59% of everything tool calls put into context, and the largest
-// single entries were whole 2,000-line source files read to find one function.
-// Scoring relevance afterwards cannot win that back: the file is what the agent
-// asked for. The only lever is to read less in the first place.
-//
-// So a Read with no offset and no limit, of a text file longer than the
-// threshold, is denied with a reason that says what to do instead. Passing
-// offset or limit is the explicit way through, so nothing is ever locked away —
-// a refusal costs one extra round trip. Every failure (unparseable input, a
-// missing or unreadable file) lets the Read proceed: this hook may only ever
-// save context, never break a session.
-//
-// READ_GUARD_MAX_LINES in the environment moves the threshold (default 400).
+// scripts/read-guard.mjs — Claude Code PreToolUse hook: denies a Read with no offset/limit of a long text file.
+// offset/limit is the way through, and any failure lets the Read proceed. READ_GUARD_MAX_LINES sets the limit.
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";

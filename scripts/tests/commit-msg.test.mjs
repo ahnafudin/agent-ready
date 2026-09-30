@@ -1,10 +1,5 @@
-// Tests for .githooks/commit-msg — the hook that keeps AI agents out of the
-// repository's contributor list.
-//
-// Settings can only ever cover the agent you configured. Every tool has its own
-// switch, new ones appear constantly, and one missed setting puts a bot in the
-// GitHub contributor graph permanently. This hook is the tool-agnostic net, so
-// what it must NOT delete matters as much as what it must.
+// Guards .githooks/commit-msg, the tool-agnostic net that keeps agents out of the contributor list.
+// What it must NOT delete matters as much as what it must.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -53,12 +48,7 @@ describe("commit-msg strips agent attribution", () => {
   });
 
   it("removes EVERY co-author line, not only an agent's", () => {
-    // The project's rule is one author per commit. Two earlier versions tried to
-    // tell agents from people and both failed: matching product names
-    // case-insensitively made "Amp" match inside "example.com" and deleted a
-    // person, and matching by bot address left a list that has to grow with
-    // every new agent — where one missed entry is permanent, because that
-    // account lands in the GitHub contributor list until history is rewritten.
+    // One author per commit: telling agents from people by name ("Amp" in "example.com") or bot list is unreliable.
     const { out, error } = run(
       [
         "fix: something",
@@ -74,9 +64,7 @@ describe("commit-msg strips agent attribution", () => {
   });
 
   it("leaves prose that merely discusses attribution alone", () => {
-    // This repository's own commit messages talk about Co-authored-by lines and
-    // "Generated with Claude Code" at length; the hook is anchored so a body
-    // mentioning them is never silently rewritten.
+    // The hook is anchored at line start, so a body that mentions these trailers is never rewritten.
     const body = 'Explains how "Generated with Claude Code" and Co-authored-by: appear in commits.';
     const { out, error } = run(`docs: explain attribution\n\n${body}\n`);
     if (error) return;

@@ -1,13 +1,6 @@
 #!/usr/bin/env node
-// scripts/tests/run.mjs — run the suite with EXPLICIT file paths.
-//
-// Not `node --test scripts/tests/*.test.mjs`: that only works where something
-// expands the glob. A POSIX shell does it, cmd.exe does not, and Node itself
-// only learned to in v21 — so the form that passes locally on Node 24 failed CI
-// on Node 20, where the glob reached Node as a literal filename. Enumerating the
-// files here works on every version and every platform, with or without a shell.
-//
-//   node scripts/tests/run.mjs [extra node --test flags]
+// scripts/tests/run.mjs — runs the suite with explicit file paths: cmd.exe and Node 20 do not expand globs.
+// Usage: node scripts/tests/run.mjs [extra node --test flags]
 
 import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";

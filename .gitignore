@@ -1,10 +1,5 @@
-# Generic rules only. Framework build artefacts are added by
-# `npm run stack:apply` in the managed block at the bottom of this file.
-#
-# Deliberately conservative: an ambiguous name like `bin/`, `obj/`, `out/` or
-# `target/` is NOT listed here, because ignoring a real source directory loses
-# files silently (Rails' `bin/rails`, Symfony's `bin/console`), while a missing
-# ignore is merely noisy. The registry knows which stack means which.
+# Generic rules only; `npm run stack:apply` adds framework artefacts in the managed block below.
+# Ambiguous names (`bin/`, `obj/`, `out/`, `target/`) are left out: ignoring real source loses files silently.
 
 # ── Secrets ───────────────────────────────────────────────────────────────
 .env
@@ -76,8 +71,5 @@ coverage/
 *.tsbuildinfo
 # <<< vibe:stack-ignores
 
-# `bd init` appends a bare `*.db` here. Narrowed on purpose: agent-ready
-# scopes the rule to .beads/ (above) so a project's own SQLite file — a seeded
-# fixture, a dev database you actually track — is never ignored silently.
-# Widen it yourself if your project genuinely wants every *.db ignored.
+# `bd init` appends a bare `*.db` here; narrowed to .beads/ so a project's own tracked database is never ignored.
 .beads/*.db

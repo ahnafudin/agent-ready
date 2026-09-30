@@ -1,30 +1,6 @@
-// scripts/version.mjs — the SINGLE source of truth for the app semver
-// (MAJOR.MINOR.PATCH). `package.json` holds the canonical value; this script
-// propagates it to every OPTIONAL manifest that happens to exist in the repo, so
-// one script serves a plain web app, Tauri, Laravel, Flutter, Spring Boot, a
-// Helm chart or a WordPress plugin without configuration.
-//
-//   node scripts/version.mjs get                 print the current version
-//   node scripts/version.mjs sync                rewrite every manifest to match package.json
-//   node scripts/version.mjs patch|minor|major   bump + write all manifests
-//   node scripts/version.mjs set 1.2.3           set an explicit version
-//   node scripts/version.mjs infer "<msg>"       print the bump a commit msg implies
-//   node scripts/version.mjs manifests           list the files a bump would touch
-//   node scripts/version.mjs from-commit <msg|file>   infer + bump in one step
-//
-// `manifests` exists so `.githooks/post-commit` never has to repeat the list —
-// one registry, consulted by both. Adding a stack is one TARGETS entry.
-//
-// Writes are targeted regex replacements (never a JSON/TOML reparse+reformat),
-// so a bump touches only the version string and produces a one-line diff.
-// `writeAll` is two-phase: every target is read and validated BEFORE any byte is
-// written, so a validation failure can never leave the manifests half-synced.
-//
-// Deliberately independent of scripts/stacks.json: detection here is by file
-// existence and content, so versioning keeps working even if a registry entry is
-// wrong. Some version fields are NOT touched, on purpose — see docs/VERSIONING.md:
-// Xcode MARKETING_VERSION, Android versionCode, Flutter build number, Expo
-// runtimeVersion. Those are release-cadence counters, not semver.
+// scripts/version.mjs — the app semver: package.json is canonical; every other manifest present is synced to it.
+// Rewrites are targeted regex edits (one-line diffs) and ignore scripts/stacks.json, so a bad entry cannot break them.
+// Release counters (Android versionCode, Flutter build number, ...) are not semver: see docs/VERSIONING.md.
 
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -62,14 +38,8 @@ export function nextVersion(current, bump) {
 }
 
 /**
- * Map a conventional-commit message to the semver bump it implies:
- *   feat                       → minor
- *   fix | perf | refactor      → patch
- *   `type!:` or a `BREAKING CHANGE:` footer (conventional header required) → major
- *   docs | test | chore | ci | style | build | (non-conventional) → null
- * Returns `null` when the commit should NOT bump. A non-conventional message
- * NEVER bumps — even if its body mentions "BREAKING CHANGE" (the footer token
- * requires the colon, per the conventional-commits spec).
+ * The bump a conventional commit implies: feat → minor; fix|perf|refactor → patch; `type!:` or a
+ * `BREAKING CHANGE:` footer → major; anything else, including any non-conventional message, → null.
  */
 export function inferBump(message) {
   if (!message) return null;
@@ -245,12 +215,7 @@ function planMsBuild(path, raw, version) {
   return null;
 }
 
-/**
- * Maven `<version>` — the PROJECT's own, never `<parent>`'s and never a
- * dependency's. The coordinate block is the region before the first structural
- * element, with any `<parent>…</parent>` removed; the first `<version>` left in
- * that region is the project's.
- */
+/** Maven `<version>`: the project's own, the first one before any structural element once `<parent>` is cut out. */
 function planPom(path, raw, version) {
   const bodyStart = raw.search(/<project\b/);
   if (bodyStart < 0) return null;
@@ -351,11 +316,7 @@ const TARGETS = [
   { find: () => find("VERSION"), plan: planVersionFile },
 ];
 
-/**
- * Plan every rewrite without touching disk. Shared by `writeAll` (which then
- * flushes) and `manifests` (which only needs the file list) — so the hook and
- * the writer can never disagree about which files are in play.
- */
+/** Every rewrite, planned without touching disk; `writeAll` and `manifests` share it so they never disagree. */
 export function planAll(version) {
   parseSemver(version); // validate before reading anything
   const plans = [];
@@ -397,9 +358,7 @@ export function currentVersion() {
   return m[1];
 }
 
-// Exported for scripts/tests/version.test.mjs. Every planner is a pure
-// (path, raw, version) → string|null transform, so the manifest rewrites are
-// tested directly against fixtures instead of scattering temp repos on disk.
+// Each planner is a pure (path, raw, version) → string|null transform, so tests feed it fixtures directly.
 export const __test = { expandGlob, tomlSection, planners: {
   jsonVersion,
   planCargoToml,
@@ -471,8 +430,7 @@ function main(argv) {
   }
 }
 
-// Run the CLI only when invoked directly (so unit tests can import the pure
-// helpers without triggering a manifest write).
+// Run the CLI only when invoked directly, so tests can import without writing manifests.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main(process.argv.slice(2));
 }
