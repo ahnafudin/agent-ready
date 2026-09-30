@@ -1,12 +1,21 @@
 <!-- tooling:readme -->
 # agent-ready
 
+**One set of rules every AI coding agent follows, one command that says the work is done, and a gate that
+turns AI slop red.**
+
+[![gate](https://github.com/ahnafudin/agent-ready/actions/workflows/gate.yml/badge.svg)](https://github.com/ahnafudin/agent-ready/actions/workflows/gate.yml)
+[![release](https://img.shields.io/github/v/release/ahnafudin/agent-ready)](https://github.com/ahnafudin/agent-ready/releases)
+[![license](https://img.shields.io/github/license/ahnafudin/agent-ready)](https://github.com/ahnafudin/agent-ready/blob/main/LICENSE)
+
+![A four-line comment fails npm run slop; cut to one line, it passes.](https://raw.githubusercontent.com/ahnafudin/agent-ready/main/.github/assets/demo.svg)
+
 A project starter that makes a new repo **ready for AI coding agents** — structure and contracts only, no stack
 lock-in. Copy it, fill the placeholders, and every coding session starts with the right rules, the
 right docs, a working issue tracker and one command that means "is this green?" — **whichever AI
 tool and whichever framework you use.** You type only the task.
 
-## The two problems it solves
+## The three problems it solves
 
 **1. Every AI tool looks for a different file.** Rules written for one agent are invisible to the
 next. Here `AGENTS.md` is canonical, and `npm run agents:sync` generates a pointer for every other
@@ -16,6 +25,10 @@ loads the same contract instead of nothing.
 **2. "Run the tests" means something different in every framework.** Here it is always
 `npm run gate`. What that expands to comes from a **70-entry framework registry** (55 frameworks,
 15 language bases) that detects your stack and writes the real commands into `package.json`.
+
+**3. Agents write slop that nobody asked for.** Narrative comments, filler copy, generic screens.
+Here the rules live in `docs/anti-slop/`, and the one a machine can check runs first in every
+`npm run gate`: a comment over three lines fails it, in any of 76 languages.
 
 ## What you get
 
