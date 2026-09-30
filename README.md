@@ -28,6 +28,7 @@ loads the same contract instead of nothing.
 | `docs/STACK.md` | **Generated** per project: which framework was detected, where heavy logic belongs, the exact gate commands, framework conventions. The brief a fresh agent reads instead of guessing. |
 | `docs/` skeletons | `PRD` · `ARCHITECTURE` · `FEATURES` · `TASKS` · `ROADMAP` · `VERSIONING` — thin frames, not content. |
 | **Archive contract** | `docs/archive/STATUS_ARCHIVE.md` + `TASKS_ARCHIVE.md`: when work merges, its full story moves here and `AGENTS.md` keeps ≤ 1 bullet per domain — the always-loaded context never bloats. |
+| **Read guard** | `scripts/read-guard.mjs`, a Claude Code hook that denies reading a whole file over 400 lines without an offset/limit window, and says how to read the part you need instead. Whole files read to find one function are the largest single entries in a long session's context, and nothing takes them back out. |
 | **Beads issue tracker** | Optional `bd` wiring with rules reconciled for this workflow: bd = cross-session issues, `docs/TASKS.md` = roadmap checklist, no auto-push. Silent when bd is not installed, and refuses to initialise until you rename the project — bd commits an identity, which must not ship from a template. |
 | **Auto-versioning** | A conventional-commit hook bumps semver in `package.json` and syncs **every other manifest that exists** — inside the same commit. |
 | **No agent attribution** | Three layers, because one bad commit is permanent — it puts a bot in your GitHub contributor list, removable only by rewriting published history. `.claude/settings.json` stops Claude Code adding `Co-Authored-By`, a "Generated with" line or a session link, and arms the hooks at session start; `.githooks/commit-msg` strips them whatever tool wrote them — Cursor, Copilot, or one that does not exist yet; and `.github/workflows/attribution.yml` fails the build if any commit carries them anyway, which is the layer that covers a fresh clone where no hook is installed yet. The rule is **one author per commit**: every `Co-Authored-By` line goes, not only an agent's, because separating the two was tried by name (which deleted a real person whose address contained "amp") and by bot address (a list that must grow with every new agent, where one miss is permanent). Credit collaborators in the commit body. |
@@ -203,6 +204,7 @@ scripts/
   verify-stack.mjs     detect + run the gates of a scaffolded project
   check-attribution.mjs  the commit-msg rule, applied to history in CI
   setup.mjs  install-hooks.mjs  bd-prime.mjs
+  read-guard.mjs       denies an unbounded Read of a long file (Claude Code hook)
   lib/                 shared utils (git, globs, managed blocks, JSON-Schema subset)
   tests/               `node --test` via run.mjs, zero dependencies
 .claude/settings.json  Claude Code hooks + no-attribution settings

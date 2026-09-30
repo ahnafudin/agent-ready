@@ -154,6 +154,12 @@ template but do not belong in it: a repo must work on a machine that has none of
 them per machine to taste. One warning if you use caveman: never run `/caveman-compress` on
 `AGENTS.md` — it rewrites lossily and the contracts there are load-bearing.
 
+One context saver does ship: `scripts/read-guard.mjs`, a Claude Code hook that denies reading a
+whole file over 400 lines without an offset/limit window (details in `CLAUDE.md`). It is the
+exception because it depends on nothing the template does not already require — Node — so the rule
+above still holds: a machine with nothing installed gets it, and so does a cloud session, which
+never sees `~/.claude`. Installing the same guard globally as well is harmless: both run and agree.
+
 ## Day-to-day rhythm (any machine)
 
 - Session start: `git pull` + `bd dolt pull`
