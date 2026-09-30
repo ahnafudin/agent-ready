@@ -54,6 +54,9 @@ jobs:
               # The composer plugin allowed above registers every installed standard.
               vendor/bin/phpcs -i
 
+          - id: laravel
+            scaffold: composer create-project laravel/laravel fixture --no-interaction
+
           # ---- JVM ----
           - id: quarkus
             scaffold: mvn -B io.quarkus.platform:quarkus-maven-plugin:create -DprojectGroupId=org.acme -DprojectArtifactId=fixture
@@ -68,9 +71,34 @@ jobs:
                 --package org.acme --test-framework junit-jupiter --no-daemon
               printf '\ndependencies { implementation("io.ktor:ktor-server-core:3.0.0") }\n' >> app/build.gradle.kts
 
+          # The two JVM bases alone: Maven's quickstart archetype and `gradle init`'s Java app.
+          - id: maven
+            scaffold: |
+              mvn -B archetype:generate -DgroupId=org.acme -DartifactId=fixture \
+                -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.5 -DinteractiveMode=false
+
+          - id: gradle
+            scaffold: |
+              mkdir -p fixture && cd fixture
+              gradle init --type java-application --dsl kotlin --project-name fixture \
+                --package org.acme --test-framework junit-jupiter --no-daemon
+
+          # Spring Initializr's documented curl form. Its default build is Gradle; the entry
+          # extends maven, so the project is asked for as Maven.
+          - id: spring-boot
+            scaffold: |
+              curl -fsSL -G https://start.spring.io/starter.tgz -d dependencies=web \
+                -d type=maven-project -d baseDir=fixture | tar -xzf -
+
           # ---- .NET ----
           - id: blazor
             scaffold: dotnet new blazor -o fixture
+
+          - id: dotnet
+            scaffold: dotnet new console -o fixture
+
+          - id: aspnetcore
+            scaffold: dotnet new webapp -o fixture
 
           - id: avalonia
             scaffold: |
@@ -97,6 +125,12 @@ jobs:
               bundle install
               # Autocorrect the fixture's own Gemfile; a real project is rubocop-clean before the gate runs.
               bundle exec rubocop -A || true
+
+          - id: rails
+            setupRuby: true
+            scaffold: |
+              gem install rails --no-document
+              rails new fixture --skip-git
 
           # ---- Bun ----
           - id: elysia
@@ -201,15 +235,20 @@ jobs:
           - id: adonisjs
             scaffold: npm create adonisjs@latest fixture -- --kit=hypermedia --pkg=npm
 
-          # Expo's ESLint setup is a first `npx expo lint`: it installs and configures ESLint, then
-          # fails to load it in that same process. The gate's run afterwards is the real lint.
+          # The default template fails its own lint (react-hooks/set-state-in-effect in a web
+          # hook), so this is the official blank-typescript template.
           - id: expo
             scaffold: |
-              npx create-expo-app@latest fixture --yes
+              npx create-expo-app@latest fixture --template blank-typescript --yes
+              # Expo's documented ESLint setup is a first `npx expo lint`: it installs ESLint, then
+              # fails to load it in that same process. The gate's run afterwards is the real lint.
               cd fixture && (npx expo lint || true)
 
           - id: react-native
             scaffold: npx @react-native-community/cli@latest init Fixture --directory fixture --pm npm --skip-git-init --install-pods false
+
+          - id: ionic
+            scaffold: npx @ionic/cli start fixture blank --type=angular --capacitor --no-git
 
           # ---- Python (setup-python: the image's own Python refuses pip installs, PEP 668) ----
           - id: django
@@ -222,6 +261,9 @@ jobs:
           # TestClient test from FastAPI's testing docs. Its uv venv goes on PATH for the gates.
           - id: fastapi
             setupPython: true
+            # fastapi-new's main.py trips ruff 0.16's default import rule (I001); lint is the
+            # python base's `ruff check .`, which django and streamlit run.
+            only: typecheck,test
             scaffold: |
               pip install uv
               uvx fastapi-new fixture
@@ -423,6 +465,44 @@ jobs:
               }
               EOF
 
+          # ---- Desktop ----
+
+          # Tauri's documented Linux prerequisites first; clippy as for the Rust entries.
+          - id: tauri
+            scaffold: |
+              sudo apt-get update -q
+              sudo apt-get install -y -q libwebkit2gtk-4.1-dev build-essential curl wget file \
+                libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+              rustup component add clippy
+              npm create tauri-app@latest fixture -- --template vanilla-ts --manager npm --yes
+              cd fixture && npm install
+
+          # ---- Dart ----
+          - id: dart
+            setupDart: true
+            scaffold: dart create fixture
+
+          - id: flutter
+            setupFlutter: true
+            scaffold: flutter create fixture
+
+          # ---- Elixir ----
+          - id: elixir
+            setupBeam: true
+            scaffold: mix new fixture
+
+          # SQLite, one of phx.new's documented databases, needs no server on the runner.
+          - id: phoenix
+            setupBeam: true
+            scaffold: |
+              mix archive.install hex phx_new --force
+              mix phx.new fixture --database sqlite3 --install
+
+          # ---- Infrastructure ----
+          - id: helm
+            setupHelm: true
+            scaffold: helm create fixture
+
           # ---- Swift (preinstalled on the 24.04 image; the 26.04 image ships none) ----
           - id: swift
             runsOn: ubuntu-24.04
@@ -468,6 +548,23 @@ jobs:
         if: matrix.setupGo
         with:
           go-version: stable
+
+      - uses: dart-lang/setup-dart@v1
+        if: matrix.setupDart
+
+      - uses: subosito/flutter-action@v2
+        if: matrix.setupFlutter
+        with:
+          channel: stable
+
+      - uses: erlef/setup-beam@v1
+        if: matrix.setupBeam
+        with:
+          otp-version: "28"
+          elixir-version: "1.19"
+
+      - uses: azure/setup-helm@v5
+        if: matrix.setupHelm
 
       - uses: shivammathur/setup-php@v2
         if: matrix.setupPhp
