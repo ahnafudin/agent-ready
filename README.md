@@ -28,8 +28,9 @@ loads the same contract instead of nothing.
 15 language bases) that detects your stack and writes the real commands into `package.json`.
 
 **3. Agents write slop that nobody asked for.** Narrative comments, filler copy, generic screens.
-Here the rules live in `docs/anti-slop/`, and the one a machine can check runs first in every
-`npm run gate`: a comment over three lines fails it, in any of 76 languages.
+Here the rules live in `docs/anti-slop/`, and the ones a machine can check run first in every
+`npm run gate`: a comment over three lines fails it, in any of 76 languages, and so does text in
+`DESIGN.md` that misses WCAG AA contrast.
 
 ## What you get
 
@@ -44,6 +45,7 @@ Here the rules live in `docs/anti-slop/`, and the one a machine can check runs f
 | **Archive contract** | `docs/archive/STATUS_ARCHIVE.md` + `TASKS_ARCHIVE.md`: when work merges, its full story moves here and `AGENTS.md` keeps ≤ 1 bullet per domain — the always-loaded context never bloats. |
 | **Read guard** | `scripts/read-guard.mjs`, a Claude Code hook that denies reading a whole file over 400 lines without an offset/limit window, and says how to read the part you need instead. Whole files read to find one function are the largest single entries in a long session's context, and nothing takes them back out. |
 | **Anti-slop** | Rules for code, UI, copy and reports in `docs/anti-slop/`, enforced wherever a machine can check them: `npm run gate` runs a comment check first, in every language the registry knows, and in Claude Code `slop-guard` names a long comment right after the edit. |
+| **`DESIGN.md`** | **The visual identity agents build UI from**, in the open DESIGN.md format: tokens (colours, type, spacing, radii, components) in the front matter, how to use them in eight fixed sections. It ships as a frame with every token group marked `omitted`, so the look is decided there before the first screen. `npm run gate` checks its format and the WCAG AA contrast of every component's text, unrounded, with the 3:1 limit only for text that is actually large; `npm run design:lint` runs the format's own linter. |
 | **Beads issue tracker** | Optional `bd` wiring with rules reconciled for this workflow: bd = cross-session issues, `docs/TASKS.md` = roadmap checklist, no auto-push. Silent when bd is not installed, and refuses to initialise until you rename the project — bd commits an identity, which must not ship from agentready. |
 | **Auto-versioning** | A conventional-commit hook bumps semver in `package.json` and syncs **every other manifest that exists** — inside the same commit. |
 | **No agent attribution** | Three layers, because one bad commit is permanent — it puts a bot in your GitHub contributor list, removable only by rewriting published history. `.claude/settings.json` stops Claude Code adding `Co-Authored-By`, a "Generated with" line or a session link, and arms the hooks at session start; `.githooks/commit-msg` strips them whatever tool wrote them — Cursor, Copilot, or one that does not exist yet; and `.github/workflows/attribution.yml` fails the build if any commit carries them anyway, which is the layer that covers a fresh clone where no hook is installed yet. The rule is **one author per commit**: every `Co-Authored-By` line goes, not only an agent's, because separating the two was tried by name (which deleted a real person whose address contained "amp") and by bot address (a list that must grow with every new agent, where one miss is permanent). Credit collaborators in the commit body. If one lands anyway, rewriting history removes the commit but not GitHub's cached contributor list; renaming the default branch away and back makes GitHub rebuild it. |
@@ -165,8 +167,10 @@ request. `paths` is optional; without it every tracked file is checked:
 | Command | What it does |
 |---|---|
 | `npm run setup` | One-shot bootstrap. Idempotent; safe to re-run on any machine. |
-| **`npm run gate`** | **The one command that means "is this green?"** — slop → lint → typecheck → test → build, stopping at the first failure. |
+| **`npm run gate`** | **The one command that means "is this green?"** — slop → design → lint → typecheck → test → build, stopping at the first failure. |
 | `npm run slop` | The comment check alone (`tooling.slop` in `package.json` sets the limit and ignored paths). |
+| `npm run design` | The `DESIGN.md` check alone: format, token references and text contrast. |
+| `npm run design:lint` | The DESIGN.md format's official linter, fetched with npx (not part of the gate). |
 | `npm run gate test` | A single stage. |
 | `npm run gate:list` | What `gate` would run, without running it. |
 | `npm run stack:detect` | Which framework matched, its bases, and the full ranking. |
@@ -228,6 +232,7 @@ per-machine, and how to sync beads issue data with `bd dolt push` / `bd dolt pul
 ```
 AGENTS.md              CANONICAL rules — edit here, then `npm run agents:sync`
 CLAUDE.md              @AGENTS.md import + Claude-Code-only extras
+DESIGN.md              visual identity: design tokens + how to use them (open DESIGN.md format)
 GEMINI.md  CONVENTIONS.md  .cursor/  .windsurf/  .clinerules/  .junie/  .github/copilot-instructions.md
                        generated pointers — do not hand-edit
 .aider.conf.yml        makes Aider read CONVENTIONS.md, which it loads only when told to
@@ -257,6 +262,7 @@ scripts/
   setup.mjs  install-hooks.mjs  bd-prime.mjs
   read-guard.mjs       denies an unbounded Read of a long file (Claude Code hook)
   slop-check.mjs       `npm run slop`: the comment check the gate runs first
+  design-check.mjs     `npm run design`: DESIGN.md format and text contrast, the gate's second check
   slop-guard.mjs       the same check right after each edit (Claude Code hook)
   lib/                 shared utils (git, globs, managed blocks, JSON-Schema subset)
   tests/               `node --test` via run.mjs, zero dependencies
