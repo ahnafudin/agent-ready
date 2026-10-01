@@ -53,6 +53,8 @@ Then fill the placeholders — search for `TODO:fill`:
 - [ ] `docs/PRD.md` — problem, goals, scope, risks, guardrails
 - [ ] `docs/ARCHITECTURE.md` — layers + first decisions
 - [ ] `docs/TASKS.md` — phase 1 checklist
+- [ ] `DESIGN.md` — if the project has a UI: the tokens and the eight sections, before the first
+      screen; move each token group out of `omitted` as you define it (`npm run design` checks it)
 - [ ] A `LICENSE` file for your project — `npm run setup` moves agentready's MIT licence to
       `docs/TOOLING-LICENSE` (it covers the copied tooling), so the root is yours to choose
 - [ ] Delete the SETUP NOTE at the top of `AGENTS.md`

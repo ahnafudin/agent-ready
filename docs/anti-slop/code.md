@@ -18,6 +18,9 @@ official comment syntax. A file it cannot place with certainty, such as `.m`, is
   section numbers, no restating the next line. History goes in the commit message, design in `docs/`.
 - A comment that needs more than three lines means the code needs a better name, a smaller
   function, or a doc.
+- No banner or divider comments, and no comment that only names what follows (`// Helpers`).
+- A comment cleanup changes comments only. Notes on security, concurrency, protocols, workarounds
+  and licences stay, shortened if they run long.
 
 Slop:
 

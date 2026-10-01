@@ -205,9 +205,10 @@ describe("the wiring", () => {
     assert.ok(existsSync(guard.args[0].replace("${CLAUDE_PROJECT_DIR}", at("."))));
   });
 
-  it("lists slop first in every gate run", () => {
+  it("lists slop, then the DESIGN.md check, first in every gate run", () => {
     const r = spawnSync(process.execPath, [at("scripts", "gate.mjs"), "--list"], { encoding: "utf8" });
     const listed = r.stderr.split("\n").filter((l) => /^\s{2}\S/.test(l));
     assert.match(listed[0], /^\s+slop\s+node scripts\/slop-check\.mjs/);
+    assert.match(listed[1], /^\s+design\s+node scripts\/design-check\.mjs/);
   });
 });

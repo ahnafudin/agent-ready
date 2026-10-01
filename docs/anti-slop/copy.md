@@ -11,3 +11,7 @@ Every text a person reads: UI strings, docs, README, changelog, commit messages,
 - No emoji in docs, UI copy or commit messages.
 - A heading names what follows; it does not tease it.
 - A changelog entry says what changed for the user, not which files moved.
+- A rewrite adds no fact the source did not have. What is unknown stays unknown.
+- No announcing what the text is about to do ("In this section…", "Here is…"), and no assistant
+  sign-off ("Let me know if…") left in the text.
+- One tell is not slop; a cluster is. Fix the cluster and keep the writer's own voice.

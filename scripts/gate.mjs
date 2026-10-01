@@ -1,15 +1,20 @@
 #!/usr/bin/env node
-// scripts/gate.mjs — `npm run gate`: the anti-slop check, then tooling.gates lint → typecheck → test → build.
+// scripts/gate.mjs — `npm run gate`: the anti-slop checks, then tooling.gates lint → typecheck → test → build.
 // `npm run gate test` runs one gate; `npm run gate:list` lists them (npm swallows a leading `--list`).
 
 import { spawnSync } from "node:child_process";
+import { reportDesign } from "./design-check.mjs";
 import { at, isMain, parseFlags, readJson } from "./lib/util.mjs";
 import { reportSlop } from "./slop-check.mjs";
 import { detectResolved, mergeGates } from "./stacks.mjs";
 
 const ORDER = ["lint", "typecheck", "test", "build"];
-/** Built in and always first, so no stack's gate set can drop it. */
-const SLOP = "slop";
+/** Built in and always first, so no stack's gate set can drop them. */
+const BUILT_IN = [
+  { key: "slop", script: "scripts/slop-check.mjs", run: () => reportSlop() },
+  { key: "design", script: "scripts/design-check.mjs", run: () => reportDesign() },
+];
+const BUILT_IN_KEYS = BUILT_IN.map((b) => b.key);
 // 127 = POSIX "command not found"; 9009 = the cmd.exe equivalent on Windows.
 const NOT_FOUND = new Set([127, 9009]);
 
@@ -92,21 +97,22 @@ function main(argv) {
 
   if (flags.has("--list")) {
     process.stderr.write(`[gate] source: ${source}\n`);
-    process.stderr.write(`  ${SLOP.padEnd(10)} node scripts/slop-check.mjs (built in, always first)\n`);
+    for (const b of BUILT_IN) process.stderr.write(`  ${b.key.padEnd(10)} node ${b.script} (built in, always first)\n`);
     for (const k of keys) for (const c of asList(gates[k])) process.stderr.write(`  ${k.padEnd(10)} ${c}\n`);
     return 0;
   }
 
-  const rest = only.filter((k) => k !== SLOP);
+  const rest = only.filter((k) => !BUILT_IN_KEYS.includes(k));
   const passed = [];
-  if (only.length === 0 || only.includes(SLOP)) {
-    process.stderr.write("\n\x1b[36m$ node scripts/slop-check.mjs\x1b[0m\n");
-    if (reportSlop() !== 0) return fail(SLOP, 1, "", passed);
-    passed.push(SLOP);
-    if (only.length && rest.length === 0) {
-      process.stderr.write(`\n\x1b[32m[gate] PASSED: ${SLOP}\x1b[0m\n`);
-      return 0;
-    }
+  for (const b of BUILT_IN) {
+    if (only.length && !only.includes(b.key)) continue;
+    process.stderr.write(`\n\x1b[36m$ node ${b.script}\x1b[0m\n`);
+    if (b.run() !== 0) return fail(b.key, 1, "", passed);
+    passed.push(b.key);
+  }
+  if (only.length && rest.length === 0) {
+    process.stderr.write(`\n\x1b[32m[gate] PASSED: ${passed.join(" → ")}\x1b[0m\n`);
+    return 0;
   }
 
   if (keys.length === 0) {
@@ -120,7 +126,7 @@ function main(argv) {
 
   const selected = rest.length ? keys.filter((k) => rest.includes(k)) : keys;
   if (rest.length && selected.length === 0) {
-    process.stderr.write(`[gate] unknown gate: ${rest.join(", ")} — available: ${[SLOP, ...keys].join(", ")}\n`);
+    process.stderr.write(`[gate] unknown gate: ${rest.join(", ")} — available: ${[...BUILT_IN_KEYS, ...keys].join(", ")}\n`);
     return 1;
   }
 
